@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.1",
+  "generated_at": "2026-10-28T02:29:21.494297+00:00",
+  "method": "re-derived offline from platform_runs.jsonl + platform_events/*.json; original records unchanged",
+  "totals": {
+    "runs": 9,
+    "success": 3,
+    "success_rate": 0.333,
+    "error_type_distribution": {
+      "ok": 3,
+      "awaiting_approval": 2,
+      "incomplete_stream": 1,
+      "classification_rejected": 1,
+      "infrastructure_error": 2
+    }
+  },
+  "by_case": {
+    "PLAT-001": {
+      "n": 3,
+      "success": 3,
+      "types": {
+        "ok": 3
+      },
+      "success_rate": 1.0,
+      "avg_elapsed_seconds": 12.82
+    },
+    "PLAT-002": {
+      "n": 3,
+      "success": 0,
+      "types": {
+        "awaiting_approval": 2,
+        "incomplete_stream": 1
+      },
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 151.04
+    },
+    "PLAT-003": {
+      "n": 3,
+      "success": 0,
+      "types": {
+        "classification_rejected": 1,
+        "infrastructure_error": 2
+      },
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 63.13
+    }
+  },
+  "runs": [
+    {
+      "run_id": "PLT-20261028021540378914",
+      "case_id": "PLAT-001",
+      "rep": 1,
+      "status": 200,
+      "event_count": 85,
+      "elapsed_seconds": 10.29,
+      "final_answer": "ok",
+      "original_error_type": null,
+      "derived_error_type": "ok",
+      "derived_success": true
+    },
+    {
+      "run_id": "PLT-20261028021555876300",
+      "case_id": "PLAT-001",
+      "rep": 2,
+      "status": 200,
+      "event_count": 89,
+      "elapsed_seconds": 15.48,
+      "final_answer": "ok",
+      "original_error_type": null,
+      "derived_error_type": "ok",
+      "derived_success": true
+    },
+    {
+      "run_id": "PLT-20261028021608575119",
+      "case_id": "PLAT-001",
+      "rep": 3,
+      "status": 200,
+      "event_count": 86,
+      "elapsed_seconds": 12.69,
+      "final_answer": "ok",
+      "original_error_type": null,
+      "derived_error_type": "ok",
+      "derived_success": true
+    },
+    {
+      "run_id": "PLT-20261028021840714532",
+      "case_id": "PLAT-002",
+      "rep": 1,
+      "status": 200,
+      "event_count": 367,
+      "elapsed_seconds": 152.13,
+      "final_answer": "",
+      "original_error_type": null,
+      "derived_error_type": "awaiting_approval",
+      "derived_success": false
+    },
+    {
+      "run_id": "PLT-20261028022111274641",
+      "case_id": "PLAT-002",
+      "rep": 2,
+      "status": 200,
+      "event_count": 392,
+      "elapsed_seconds": 150.54,
+      "final_answer": "",
+      "original_error_type": null,
+      "derived_error_type": "awaiting_approval",
+      "derived_success": false
+    },
+    {
+      "run_id": "PLT-20261028022341768733",
+      "case_id": "PLAT-002",
+      "rep": 3,
+      "status": 200,
+      "event_count": 745,
+      "elapsed_seconds": 150.46,
+      "final_answer": "",
+      "original_error_type": null,
+      "derived_error_type": "incomplete_stream",
+      "derived_success": false
+    },
+    {
+      "run_id": "PLT-20261028022612918355",
+      "case_id": "PLAT-003",
+      "rep": 1,
+      "status": 200,
+      "event_count": 503,
+      "elapsed_seconds": 151.1,
+      "final_answer": "",
+      "original_error_type": null,
+      "derived_error_type": "classification_rejected",
+      "derived_success": false
+    },
+    {
+      "run_id": "PLT-20261028022651214252",
+      "case_id": "PLAT-003",
+      "rep": 2,
+      "status": 502,
+      "event_count": 0,
+      "elapsed_seconds": 38.25,
+      "final_answer": "",
+      "original_error_type": null,
+      "derived_error_type": "infrastructure_error",
+      "derived_success": false
+    },
+    {
+      "run_id": "PLT-20261028022651268506",
+      "case_id": "PLAT-003",
+      "rep": 3,
+      "status": 502,
+      "event_count": 0,
+      "elapsed_seconds": 0.05,
+      "final_answer": "",
+      "original_error_type": null,
+      "derived_error_type": "infrastructure_error",
+      "derived_success": false
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "PLAT-003",
+  "title": "否定式工具约束",
+  "category": "classify_boundary",
+  "message": "运行 fibonacci.py，不要调用演示文稿工具。",
+  "repeat": 3,
+  "oracle": {
+    "expect_no_error": true
+  }
+}

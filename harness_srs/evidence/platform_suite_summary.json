@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-10-28T02:26:51.271750+00:00",
+  "totals": {
+    "runs": 9,
+    "success": 3,
+    "success_rate": 0.333,
+    "infrastructure_error": 0,
+    "agent_failure": 0
+  },
+  "by_case": {
+    "PLAT-001": {
+      "n": 3,
+      "success": 3,
+      "infrastructure_error": 0,
+      "agent_failure": 0,
+      "success_rate": 1.0,
+      "avg_elapsed_seconds": 12.82
+    },
+    "PLAT-002": {
+      "n": 3,
+      "success": 0,
+      "infrastructure_error": 0,
+      "agent_failure": 0,
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 151.04
+    },
+    "PLAT-003": {
+      "n": 3,
+      "success": 0,
+      "infrastructure_error": 0,
+      "agent_failure": 0,
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 63.13
+    }
+  },
+  "runs": [
+    {
+      "case_id": "PLAT-001",
+      "rep": 1,
+      "run_id": "PLT-20261028021540378914",
+      "success": true,
+      "error_type": null,
+      "elapsed": 10.29,
+      "answer": "ok"
+    },
+    {
+      "case_id": "PLAT-001",
+      "rep": 2,
+      "run_id": "PLT-20261028021555876300",
+      "success": true,
+      "error_type": null,
+      "elapsed": 15.48,
+      "answer": "ok"
+    },
+    {
+      "case_id": "PLAT-001",
+      "rep": 3,
+      "run_id": "PLT-20261028021608575119",
+      "success": true,
+      "error_type": null,
+      "elapsed": 12.69,
+      "answer": "ok"
+    },
+    {
+      "case_id": "PLAT-002",
+      "rep": 1,
+      "run_id": "PLT-20261028021840714532",
+      "success": false,
+      "error_type": null,
+      "elapsed": 152.13,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-002",
+      "rep": 2,
+      "run_id": "PLT-20261028022111274641",
+      "success": false,
+      "error_type": null,
+      "elapsed": 150.54,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-002",
+      "rep": 3,
+      "run_id": "PLT-20261028022341768733",
+      "success": false,
+      "error_type": null,
+      "elapsed": 150.46,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-003",
+      "rep": 1,
+      "run_id": "PLT-20261028022612918355",
+      "success": false,
+      "error_type": null,
+      "elapsed": 151.1,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-003",
+      "rep": 2,
+      "run_id": "PLT-20261028022651214252",
+      "success": false,
+      "error_type": null,
+      "elapsed": 38.25,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-003",
+      "rep": 3,
+      "run_id": "PLT-20261028022651268506",
+      "success": false,
+      "error_type": null,
+      "elapsed": 0.05,
+      "answer": ""
+    }
+  ]
+}

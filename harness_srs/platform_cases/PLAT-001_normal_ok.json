@@ -1,0 +1,11 @@
+{
+  "case_id": "PLAT-001",
+  "title": "普通任务：只回复 ok",
+  "category": "normal",
+  "message": "请只回复两个字：ok",
+  "repeat": 3,
+  "oracle": {
+    "expect_final_answer_contains": ["ok"],
+    "expect_no_error": true
+  }
+}

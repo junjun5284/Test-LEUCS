@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "mode": "real",
+  "case_id": "sample-publish-real-001",
+  "runs": 1,
+  "success": false,
+  "run_id": "REAL-sample-publish-real-001-20261027112223",
+  "error_type": null,
+  "usage": {
+    "model_request_count": 5,
+    "tool_call_count": 4,
+    "elapsed_seconds": 58.26,
+    "terminated_by": null
+  }
+}
