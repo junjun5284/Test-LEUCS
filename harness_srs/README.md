@@ -70,10 +70,11 @@ python harness_srs\report_platform.py
 ## 判定与失败分层
 
 - `ok`：正常完成
-- `awaiting_approval`：工具审批挂起，SSE 未给最终答案
+- `awaiting_approval`：工具审批挂起，SSE 未给最终答案（`--decision` 可自动应答）
 - `classification_rejected`：分类契约被拒
+- `model_contract_error`：模型响应契约异常（如 `THINK_EMPTY`）
 - `incomplete_stream` / `timeout`：流中断或超时
-- `infrastructure_error`：上游 5xx、连接失败等，不计入 Agent 行为失败率
+- `infrastructure_error`：上游 5xx、连接失败、401 等，不计入 Agent 行为失败率
 - `agent_failure`：平台正常返回但行为失败
 
 ## 安全

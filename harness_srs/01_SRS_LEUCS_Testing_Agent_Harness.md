@@ -284,9 +284,12 @@ Harness 是一个独立的测试支撑软件，不是 LEUCS 的一部分。它�
 
 #### FR-14 失败分层
 系统应将平台运行失败分为：
-- `infrastructure_error`：模型上游 HTTP 错误、超时、连接失败；
+- `infrastructure_error`：上游 HTTP 错误、超时、连接失败、鉴权失效（401/502 等）；
+- `model_contract_error`：模型响应契约异常（如 `THINK_EMPTY`、`response_contract`）；
 - `agent_failure`：平台正常返回但 Agent 行为错误或异常终止；
-- `timeout`：等待超时；
+- `awaiting_approval`：等待人工审批；
+- `classification_rejected`：分类契约被拒；
+- `timeout` / `incomplete_stream`：等待超时或流中断；
 - `ok`：正常完成。
 
 `infrastructure_error` 不得计入 Agent 行为失败率，但**平台对基础设施错误的处理方式**（是否重试、是否降级、是否给出可理解提示）应作为单独的健壮性观察项。

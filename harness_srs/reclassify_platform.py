@@ -26,8 +26,14 @@ def classify(record: Dict[str, Any], events: List[Dict[str, Any]]) -> str:
     status = record.get("status")
     if isinstance(status, int) and status != 200:
         return "infrastructure_error"
+    if record.get("error") and not events:
+        return "infrastructure_error"
     decision = any(e.get("type") == "decision" for e in events)
     rejected = any(e.get("type") == "classification_contract_rejected" for e in events)
+    texts = [str(record.get("stop_detail") or "")]
+    texts.extend(str(e.get("content") or "") for e in events)
+    joined = " ".join(texts)
+    model_contract = "response_contract" in joined or "THINK_EMPTY" in joined
     api_error = any(
         "api_error" in str(e.get("content") or "") or "HTTP_40" in str(e.get("content") or "")
         for e in events
@@ -38,6 +44,8 @@ def classify(record: Dict[str, Any], events: List[Dict[str, Any]]) -> str:
         return "awaiting_approval"
     if rejected:
         return "classification_rejected"
+    if model_contract:
+        return "model_contract_error"
     if api_error:
         return "infrastructure_error"
     if stop_reason == "error":

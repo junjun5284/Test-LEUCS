@@ -1,8 +1,8 @@
 # 平台层 Harness 运行报告
 
-- 生成时间：2026-10-29T08:09:29.861324+00:00
+- 生成时间：2026-10-29T08:23:31.860471+00:00
 - 证据来源：`harness_srs\evidence\platform_runs.jsonl` + 逐次 SSE 事件
-- 运行总数：14
+- 运行总数：18
 - 失败分层：旧记录缺 `error_type` 时，从不可变证据重新推导（原记录未修改）
 
 ## 1 失败分层
@@ -11,6 +11,7 @@
 |---|---|
 | `infrastructure_error` | 6 |
 | `ok` | 4 |
+| `model_contract_error` | 4 |
 | `awaiting_approval` | 2 |
 | `incomplete_stream` | 1 |
 | `classification_rejected` | 1 |
@@ -47,6 +48,10 @@
 | PLT-20261028022825532422 | run | - | None | `infrastructure_error` | 45.11 |  |
 | PLT-20261028022856432740 | run | - | 502 | `infrastructure_error` | 0.06 |  |
 | PLT-20261029080819545530 | run | - | 401 | `infrastructure_error` | 0.29 |  |
+| PLT-20261029082144585361 | run | - | 200 | `model_contract_error` | 7.49 |  |
+| PLT-20261029082204728237 | run | - | 200 | `model_contract_error` | 8.2 |  |
+| PLT-20261029082223703442 | run | - | 200 | `model_contract_error` | 7.2 |  |
+| PLT-20261029082239679016 | run | - | 200 | `model_contract_error` | 6.28 |  |
 
 ## 5 说明
 

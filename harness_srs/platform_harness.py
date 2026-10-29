@@ -264,6 +264,7 @@ def run_chat(
     tool_names = [c["name"] for c in tool_calls]
 
     http_status = status if isinstance(status, int) else None
+    contract_text = (stop_detail or "") + " " + (api_error or "")
     error_type = None
     if http_status is not None and http_status != 200:
         error_type = "infrastructure_error"
@@ -273,6 +274,8 @@ def run_chat(
         error_type = "awaiting_approval"
     elif contract_rejected:
         error_type = "classification_rejected"
+    elif "response_contract" in contract_text or "THINK_EMPTY" in contract_text:
+        error_type = "model_contract_error"
     elif api_error and "api_error" in api_error:
         error_type = "infrastructure_error"
     elif timed_out:

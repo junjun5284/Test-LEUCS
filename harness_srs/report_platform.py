@@ -40,12 +40,7 @@ def load_events(record: dict) -> list[dict]:
 
 def effective(record: dict, events: list[dict]) -> tuple[str, bool]:
     """Return (effective_error_type, success)."""
-    if record.get("error_type"):
-        error_type = record["error_type"]
-    elif record.get("kind") == "suite_run" and record.get("judgement"):
-        error_type = reclassify.classify(record, events)
-    else:
-        error_type = reclassify.classify(record, events)
+    error_type = reclassify.classify(record, events)
     answer = (record.get("final_answer") or "").strip()
     judgement = record.get("judgement") or {}
     success = bool(judgement.get("success")) if judgement else (error_type == "ok" and bool(answer))

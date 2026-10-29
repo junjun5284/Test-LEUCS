@@ -33,6 +33,7 @@
 | ISSUE-018 | 平台运行接口间歇性 502 / 空事件流 | 已观察 | 中 | 平台层 / PLAT-003 |
 | ISSUE-019 | 工具参数 schema 与模型习惯不一致（request/query） | 已观察 | 中 | 平台层 / PLAT-002 |
 | ISSUE-020 | 服务端 shell 工具跨环境执行（darwin/zsh） | 已观察 | 中 | 平台层 / PLAT-002 |
+| ISSUE-021 | 分类阶段三 THINK_EMPTY 导致所有任务无法交付（P0） | 已观察（4/4 复现） | 高 | 平台层 / 2026-10-29 |
 
 ---
 
@@ -385,3 +386,41 @@ python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases 
 **本轮新增观察（环境限制）**：平台令牌存在有效期，过期后运行接口返回 `401`。因此复跑前需要刷新令牌；`401` 归为 `infrastructure_error`，不计入 Agent 行为失败。
 
 **待确认**：`choice` 字段除 `approve/deny` 外是否还接受平台展示文案（如「批准执行 web_search」），尚未实测；当前实现使用 `approve/deny`。
+
+---
+
+## 7. 2026-10-29 复测：平台运行全面失败（ISSUE-021）
+
+更新令牌后连续 4 次运行，全部在分类阶段三失败：
+
+| run_id | 输入 | 事件数 | 结果 |
+|---|---|---|---|
+| `PLT-20261029082144585361` | 无 CMS 发布任务 | 141 | THINK_EMPTY |
+| `PLT-20261029082204728237` | 同上（重试） | 156 | THINK_EMPTY |
+| `PLT-20261029082223703442` | 用 web_search 查天气 | 142 | THINK_EMPTY |
+| `PLT-20261029082239679016` | 「你好」 | 125 | THINK_EMPTY |
+
+错误内容（四次一致）：
+
+```text
+RuntimeError: classification_phase3 failed:
+{'type': 'error', 'error_code': 'THINK_EMPTY',
+ 'category': 'response_contract',
+ 'message': '响应只有思考，没有正文或原生工具调用',
+ 'suggestion': '根据实际完成标记与响应协议处理本次未交付结果',
+ 'retryable': True}
+```
+
+事件序列特征：`reasoning_chunk` 114～145 个，`classification_chunk` 只有 1 个且是错误，无 `final_answer`，`stop_reason=error`。
+
+意义：
+
+1. **连「你好」都无法交付**，说明不是某个复杂任务的问题，而是运行主路径当前不可用；
+2. 与 2026-10-28 的套件结果（PLAT-001 3/3 成功）对比，属于**回归**；
+3. 因此 `--decision deny/approve` 的端到端验证被阻塞——根本走不到工具调用与审批环节；
+4. Harness 已将该错误单独归类为 `model_contract_error`（响应契约类），不再混入 `agent_failure`。
+
+建议：
+
+- 平台侧：分类阶段对 `THINK_EMPTY` 做重试或降级（错误本身标记 `retryable: True`），而不是直接 `RuntimeError` 终止整轮；
+- 测试侧：在 `model_contract_error` 下继续保留 4 条证据，待平台恢复后重跑同一组用例对比。

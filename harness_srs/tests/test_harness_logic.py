@@ -125,6 +125,15 @@ class ReclassifyTests(unittest.TestCase):
         record = {"status": 200, "final_answer": "", "stop_reason": ""}
         self.assertEqual(reclassify.classify(record, [{"type": "phase"}]), "incomplete_stream")
 
+    def test_think_empty_maps_to_model_contract_error(self):
+        record = {
+            "status": 200,
+            "final_answer": "",
+            "stop_reason": "error",
+            "stop_detail": "RuntimeError: classification_phase3 failed: {'error_code': 'THINK_EMPTY', 'category': 'response_contract'}",
+        }
+        self.assertEqual(reclassify.classify(record, []), "model_contract_error")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
