@@ -359,3 +359,29 @@ python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases 
   - `harness_srs\evidence\platform_suite_summary.json`（原始口径）
   - `harness_srs\evidence\platform_suite_summary_v2.json`（重算口径）
   - `harness_srs\evidence\platform_events\*.json`（逐次完整 SSE 事件）
+
+---
+
+## 6. v4.1 迭代记录（2026-10-29）
+
+本轮对 Harness 自身做了三项升级：
+
+1. **审批决策处理（FR-16）**
+   - 从平台前端确认决策接口：`POST /api/leucs/decision`，请求体 `{"choice": "approve|deny", "conversation_id": "..."}`，响应含 `success`；
+   - `platform_harness.py` 新增 `--decision {none,deny,approve}`：运行中遇到 `decision` 事件时自动应答并继续读流；
+   - 自动应答结果（decision_id、工具名、状态码、响应）写入证据；
+   - 这直接对应 ISSUE-016：此前客户端不处理 `decision` 就会挂起 150s，现在可以显式拒绝或批准。
+
+2. **工具调用 oracle（FR-17）**
+   - 从 SSE `tool_call` 事件还原工具调用序列并写入证据；
+   - oracle 新增 `forbidden_tools`、`must_call_any`，可与文本类断言组合；
+   - 这让“无 CMS 工具时是否调用发布类工具”可以被机械判定，而不只靠最终回答文本。
+
+3. **Harness 自测与报告**
+   - 新增 `tests/test_harness_logic.py`：13 项离线自测，覆盖 oracle、聚合、用例加载、失败分层重算；
+   - 新增 `report_platform.py`：从 JSONL + 事件文件生成 `evidence/platform_report.md`；
+   - 报告中的失败分层对旧记录采用“从不可变证据重算”，不修改原始记录。
+
+**本轮新增观察（环境限制）**：平台令牌存在有效期，过期后运行接口返回 `401`。因此复跑前需要刷新令牌；`401` 归为 `infrastructure_error`，不计入 Agent 行为失败。
+
+**待确认**：`choice` 字段除 `approve/deny` 外是否还接受平台展示文案（如「批准执行 web_search」），尚未实测；当前实现使用 `approve/deny`。

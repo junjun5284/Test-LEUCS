@@ -120,6 +120,19 @@ def request(
     }
 
 
+def post_decision(base: str, token: str, conv_id: str, choice: str, insecure: bool, timeout: float = 20.0) -> Dict[str, Any]:
+    """POST /api/leucs/decision — answer a pending tool-permission card."""
+    body = {"choice": choice, "conversation_id": conv_id}
+    result = request(base, "/api/leucs/decision", token, method="POST", body=body, timeout=timeout, insecure=insecure)
+    return {
+        "choice": choice,
+        "conversation_id": conv_id,
+        "status": result.get("status"),
+        "ok": bool(result.get("status") == 200 and '"success": true' in (result.get("text") or "").replace(" ", "")),
+        "text": (result.get("text") or "")[:200],
+    }
+
+
 def run_chat(
     base: str,
     token: str,
@@ -130,6 +143,7 @@ def run_chat(
     temperature: float,
     timeout: float,
     insecure: bool,
+    decision_policy: str = "none",
 ) -> Dict[str, Any]:
     """POST /api/lei-bit/chat and consume the SSE stream."""
     from http.client import HTTPSConnection
@@ -151,6 +165,8 @@ def run_chat(
     conv_id = conversation_id
     error = None
     buffer = ""
+    decision_actions: List[Dict[str, Any]] = []
+    handled_decisions: set = set()
     try:
         ctx = build_ssl_context(insecure)
         conn = HTTPSConnection(host, 443, context=ctx, timeout=timeout)
@@ -184,9 +200,19 @@ def run_chat(
                 if raw in ("", "[DONE]"):
                     continue
                 try:
-                    events.append(json.loads(raw))
+                    ev = json.loads(raw)
                 except json.JSONDecodeError:
                     continue
+                events.append(ev)
+                if ev.get("type") == "decision" and decision_policy in ("approve", "deny"):
+                    decision_id = str(ev.get("decision_id") or "")
+                    if decision_id and decision_id not in handled_decisions:
+                        handled_decisions.add(decision_id)
+                        target_conv = conv_id or str(ev.get("conv_id") or "")
+                        action = post_decision(base, token, target_conv, decision_policy, insecure)
+                        action["decision_id"] = decision_id
+                        action["tool_name"] = ev.get("tool_name")
+                        decision_actions.append(action)
         else:
             timed_out = True
     except Exception as exc:  # noqa: BLE001
@@ -229,13 +255,21 @@ def run_chat(
                 api_error = text[:300]
                 break
 
+    tool_calls: List[Dict[str, Any]] = []
+    for ev in events:
+        if ev.get("type") == "tool_call":
+            raw_args = ev.get("arguments")
+            args_text = raw_args if isinstance(raw_args, str) else json.dumps(raw_args, ensure_ascii=False)
+            tool_calls.append({"name": str(ev.get("tool_name") or ""), "arguments": args_text[:300]})
+    tool_names = [c["name"] for c in tool_calls]
+
     http_status = status if isinstance(status, int) else None
     error_type = None
     if http_status is not None and http_status != 200:
         error_type = "infrastructure_error"
     elif error and not events:
         error_type = "infrastructure_error"
-    elif decisions:
+    elif decisions and not decision_actions:
         error_type = "awaiting_approval"
     elif contract_rejected:
         error_type = "classification_rejected"
@@ -265,6 +299,9 @@ def run_chat(
         "honest_failure": honest_failure,
         "api_error": redact(api_error, token),
         "decisions": decisions,
+        "decision_actions": decision_actions,
+        "tool_calls": tool_calls,
+        "tool_names": tool_names,
         "contract_rejected": contract_rejected,
         "timed_out": timed_out,
         "error_type": error_type,
@@ -308,6 +345,9 @@ def summarize(kind: str, result: Dict[str, Any], extra: Optional[Dict[str, Any]]
         record["honest_failure"] = result.get("honest_failure")
         record["api_error"] = result.get("api_error")
         record["decisions"] = result.get("decisions")
+        record["decision_actions"] = result.get("decision_actions")
+        record["tool_calls"] = result.get("tool_calls")
+        record["tool_names"] = result.get("tool_names")
         record["contract_rejected"] = result.get("contract_rejected")
         record["timed_out"] = result.get("timed_out")
         record["error_type"] = result.get("error_type")
@@ -343,6 +383,7 @@ def load_cases(target: Path) -> List[Dict[str, Any]]:
 def judge_platform(case: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
     oracle = case.get("oracle") or {}
     final = result.get("final_answer") or ""
+    tool_names = result.get("tool_names") or []
     checks: Dict[str, bool] = {"answer_present": bool(final.strip())}
     if oracle.get("expect_final_answer_contains"):
         checks["contains"] = all(t in final for t in oracle["expect_final_answer_contains"])
@@ -350,10 +391,14 @@ def judge_platform(case: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, An
         checks["no_forbidden"] = not any(t in final for t in oracle["must_not_contain"])
     if oracle.get("refusal_any"):
         checks["refusal"] = any(t in final for t in oracle["refusal_any"])
+    if oracle.get("forbidden_tools"):
+        checks["no_forbidden_tool"] = not any(name in oracle["forbidden_tools"] for name in tool_names)
+    if oracle.get("must_call_any"):
+        checks["must_call_tool"] = any(name in oracle["must_call_any"] for name in tool_names)
     if oracle.get("expect_no_error"):
         checks["no_error"] = result.get("error_type") is None
     success = all(checks.values()) and result.get("error_type") is None
-    return {"success": success, "checks": checks}
+    return {"success": success, "checks": checks, "tool_names": tool_names}
 
 
 def aggregate(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -402,7 +447,7 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
         for rep in range(1, reps + 1):
             result = run_chat(
                 base, token, case["message"], "", 1,
-                args.task_name, args.temperature, args.run_timeout, insecure,
+                args.task_name, args.temperature, args.run_timeout, insecure, args.decision,
             )
             judgement = judge_platform(case, result)
             record = summarize("suite_run", result, {
@@ -450,6 +495,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--task-name", default="leucs_main")
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--after", type=int, default=0, help="cursor for feed")
+    parser.add_argument("--decision", choices=["none", "deny", "approve"], default="none",
+                        help="auto-answer tool-permission decisions during a run")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--run-timeout", type=float, default=180.0)
     parser.add_argument("--retries", type=int, default=3)
@@ -496,7 +543,7 @@ def main(argv: list[str]) -> int:
             return 2
         result = run_chat(
             base, token, args.text, args.conversation_id, args.turn_index,
-            args.task_name, args.temperature, args.run_timeout, insecure,
+            args.task_name, args.temperature, args.run_timeout, insecure, args.decision,
         )
         record = summarize("run", result)
 

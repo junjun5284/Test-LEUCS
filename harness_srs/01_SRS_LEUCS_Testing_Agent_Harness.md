@@ -1,9 +1,10 @@
 # 软件需求规格说明书（SRS）
 ## LEUCS 测试智能体 / Harness 项目
-> 版本：v2.0
+> 版本：v4.1
 > 参考格式：IEEE 830 中文版
 > 适用周期：10.21 - 11.11，三次迭代，11.11 验收
 > 变更说明（v4.0）：新增“平台层”测试范围——基于实测确认的网站 API（`/api/lei-bit/chat` 等）定义接口需求、平台用例与 oracle、失败分层与平台证据格式；模型层（AgentLoop + Provider）内容保留。
+> 变更说明（v4.1）：新增 FR-16（审批决策自动应答，`/api/leucs/decision`）与 FR-17（工具调用 oracle）；新增 Harness 自测（`tests/test_harness_logic.py`）与离线报告生成（`report_platform.py`）。
 > 说明：本文档描述 Harness 应做什么、不做什么，以及如何验收；不修改被测系统源码。
 
 ---
@@ -124,6 +125,7 @@ Harness 是一个独立的测试支撑软件，不是 LEUCS 的一部分。它�
 | IR-11 | `/api/lei-bit/accounts/feed?after=N` | GET | 游标轮询，读取 `conversation_updated` 等账户事件 |
 | IR-12 | `/api/lei-bit/chat` | POST | **运行入口**：提交任务并以 SSE 消费事件流；响应头 `X-LEUCS-Conversation-Id` 返回会话号 |
 | IR-13 | `/api/leucs/conversation/{id}/message` | POST | 仅保存消息（`{"action":"appended","status":"saved"}`），**不触发运行** |
+| IR-14 | `/api/leucs/decision` | POST | 应答待处理的审批决策；请求体 `{"choice":"approve|deny","conversation_id":"..."}`，响应含 `success` |
 
 运行请求体（平台层）：
 
@@ -296,6 +298,22 @@ Harness 是一个独立的测试支撑软件，不是 LEUCS 的一部分。它�
 - 读取会话消息与事件；
 - 记录会话号以便复现。
 
+#### FR-16 审批决策处理（v4.1）
+系统应能在运行过程中识别 `decision` 事件，并按策略应答：
+- `none`：不处理，记录为 `awaiting_approval`（默认）；
+- `deny`：调用 `POST /api/leucs/decision`，`choice="deny"`（默认安全策略）；
+- `approve`：调用同一接口，`choice="approve"`（仅显式开启）。
+
+应答结果（状态码、`success`、工具名、decision_id）必须写入证据；自动应答后若流继续并产出 `final_answer`，不得再判为 `awaiting_approval`。
+
+#### FR-17 工具调用 oracle（v4.1）
+系统应从 SSE 的 `tool_call` 事件还原工具调用序列，并支持以下 oracle：
+- `forbidden_tools`：出现即判不通过；
+- `must_call_any`：未出现任一即判不通过；
+- 与 `must_not_contain`、`refusal_any`、`expect_no_error` 组合使用。
+
+工具调用序列（名称 + 参数摘要）必须写入证据，供复核与二次分析。
+
 ---
 
 ## 5. 非功能需求
@@ -378,14 +396,19 @@ harness_srs/
   minimal_harness.py
   real_harness.py
   platform_harness.py
+  reclassify_platform.py      （离线重算失败分层）
+  report_platform.py          （离线生成 Markdown 报告）
   cases/            （模型层示例用例）
   cases_real/       （模型层真实用例）
   platform_cases/   （平台层用例）
+  tests/test_harness_logic.py （Harness 自身逻辑自测，离线）
   evidence/
     runs.jsonl
     runs_real.jsonl
     platform_runs.jsonl
     platform_suite_summary.json
+    platform_suite_summary_v2.json
+    platform_report.md
     platform_events/
 ```
 

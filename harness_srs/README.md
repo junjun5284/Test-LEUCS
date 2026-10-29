@@ -16,12 +16,14 @@ harness_srs/
   04_harness_implementation_design_note.md 实现设计笔记
   minimal_harness.py   最小可运行 Harness（mock，无需凭据）
   real_harness.py      模型层真实适配（AgentLoop + 真实 Provider）
-  platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite）
+  platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite/decision）
   reclassify_platform.py  从不可变证据离线重算失败分层
+  report_platform.py   从证据离线生成 Markdown 报告
+  tests/test_harness_logic.py  Harness 自身逻辑自测（离线，13 项）
   cases/               模型层示例用例
   cases_real/          模型层真实用例
   platform_cases/      平台层用例（PLAT-001~003）
-  evidence/            运行证据（JSONL / JSON / SSE 事件 / 变异输出）
+  evidence/            运行证据（JSONL / JSON / SSE 事件 / Markdown 报告）
 ```
 
 ## 快速开始（离线，无需凭据）
@@ -50,7 +52,20 @@ python harness_srs\platform_harness.py run --text "请只回复两个字：ok"
 python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases --run-timeout 150
 ```
 
+审批决策：遇到 `decision` 事件时，默认 `--decision none`（只记录为 `awaiting_approval`）；
+`--decision deny` 会自动调用 `POST /api/leucs/decision` 拒绝，`--decision approve` 则批准（仅在明确需要时使用）。
+
 平台运行证据写入 `evidence/platform_runs.jsonl`，完整 SSE 事件写入 `evidence/platform_events/`。
+
+## Harness 自测（离线，无凭据）
+
+```powershell
+python -m unittest discover -s harness_srs/tests -p "test_*.py" -v
+python harness_srs\report_platform.py
+```
+
+自测覆盖：oracle 判定（文本/工具/工具禁止/错误分层）、套件聚合、用例加载、失败分层重算。
+报告写入 `evidence/platform_report.md`。
 
 ## 判定与失败分层
 
