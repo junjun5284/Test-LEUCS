@@ -1,0 +1,12 @@
+{
+  "case_id": "PLAT-005",
+  "title": "会话续聊：第二轮应在同一 conversation 内完成",
+  "category": "session",
+  "message": "请记住一个数字：42。只回复“已记住”。",
+  "follow_up": "我刚才让你记的数字是多少？只回复数字。",
+  "repeat": 2,
+  "oracle": {
+    "expect_final_answer_contains": ["42"],
+    "expect_no_error": true
+  }
+}

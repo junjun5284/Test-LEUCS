@@ -10,20 +10,23 @@
 
 ```text
 harness_srs/
-  01_SRS_LEUCS_Testing_Agent_Harness.md   SRS v4.0（含平台层接口需求）
-  02_current_issue_list_and_prompt_methods.md  问题列表 v4.0（ISSUE-001~020）
+  01_SRS_LEUCS_Testing_Agent_Harness.md   SRS v5.0（含平台层接口与探针/回归需求）
+  02_current_issue_list_and_prompt_methods.md  问题列表 v5.0（ISSUE-001~024）
   03_合并版问题列表与SRS修订建议.md        早期合并稿（历史参考）
   04_harness_implementation_design_note.md 实现设计笔记
   minimal_harness.py   最小可运行 Harness（mock，无需凭据）
   real_harness.py      模型层真实适配（AgentLoop + 真实 Provider）
   platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite/decision）
+  platform_probe.py    平台健康探针（8 个只读端点 + 基线比对）
+  run_all.py           统一回归入口（探针 → 平台层 → 模型层）
   reclassify_platform.py  从不可变证据离线重算失败分层
   report_platform.py   从证据离线生成 Markdown 报告
-  tests/test_harness_logic.py  Harness 自身逻辑自测（离线，13 项）
+  mutants/             对 Harness 自身的变异测试
+  tests/test_harness_logic.py  Harness 自身逻辑自测（离线，23 项）
   cases/               模型层示例用例
   cases_real/          模型层真实用例
-  platform_cases/      平台层用例（PLAT-001~003）
-  evidence/            运行证据（JSONL / JSON / SSE 事件 / Markdown 报告）
+  platform_cases/      平台层用例（PLAT-001~005）
+  evidence/            运行证据（JSONL / JSON / SSE 事件 / Markdown 报告 / 变异结果）
 ```
 
 ## 快速开始（离线，无需凭据）
@@ -57,15 +60,38 @@ python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases 
 
 平台运行证据写入 `evidence/platform_runs.jsonl`，完整 SSE 事件写入 `evidence/platform_events/`。
 
-## Harness 自测（离线，无凭据）
+## 平台健康探针（需要平台令牌）
+
+```powershell
+python harness_srs\platform_probe.py                      # 8 个只读端点
+python harness_srs\platform_probe.py --save-baseline      # 保存基线
+python harness_srs\platform_probe.py --compare-baseline   # 与基线比对，输出漂移项
+```
+
+只读、不触发 Agent 运行、不产生会话副作用。**注意**：健康端点在令牌过期时仍返回 200，
+所以探针覆盖了 8 个业务端点而不是只看 health。
+
+## 统一回归入口
+
+```powershell
+python harness_srs\run_all.py --platform-only --reps 3 --probe
+python harness_srs\run_all.py --model-only
+```
+
+串联健康探针 → 平台层套件 → 模型层，产出 `evidence/regression_report.md` 与
+`evidence/regression_report.json`。
+
+## Harness 自测与变异测试（离线，无凭据）
 
 ```powershell
 python -m unittest discover -s harness_srs/tests -p "test_*.py" -v
 python harness_srs\report_platform.py
+python harness_srs\mutants\run_harness_mutants.py
 ```
 
-自测覆盖：oracle 判定（文本/工具/工具禁止/错误分层）、套件聚合、用例加载、失败分层重算。
-报告写入 `evidence/platform_report.md`。
+自测覆盖：oracle 判定（文本/工具/工具禁止/错误分层/词边界）、套件聚合、用例加载、失败分层重算。
+变异测试对 **Harness 自身**的判定逻辑施加 14 个单一逻辑变异，检验"断言是否真的在断言"；
+存活变异体即自测缺口，结果写入 `evidence/harness_mutants.json`。
 
 ## 判定与失败分层
 
@@ -83,7 +109,10 @@ python harness_srs\report_platform.py
 - 提交目录不含任何令牌；如曾泄露，请在服务端轮换
 - 平台地址与测试账号信息按课程要求脱敏使用
 
-## 当前状态（2026-10）
+## 当前状态（2026-11-04）
 
-- 平台层套件：9 次运行，成功 3 次；失败分布见 `evidence/platform_suite_summary_v2.json`
-- 已记录问题 20 条，详见 `02_current_issue_list_and_prompt_methods.md`
+- Harness 自测 23 项全部通过；变异测试 14/14 全部被识别
+- 平台层用例 5 个（PLAT-001~005），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊
+- 已记录问题 24 条，详见 `02_current_issue_list_and_prompt_methods.md`
+- 已知平台侧阻塞：`classification_phase3` 的 `THINK_EMPTY` 会终止整轮（ISSUE-021），
+  需平台恢复后才能完成审批与续聊用例的端到端验证

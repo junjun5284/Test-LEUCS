@@ -34,6 +34,9 @@
 | ISSUE-019 | 工具参数 schema 与模型习惯不一致（request/query） | 已观察 | 中 | 平台层 / PLAT-002 |
 | ISSUE-020 | 服务端 shell 工具跨环境执行（darwin/zsh） | 已观察 | 中 | 平台层 / PLAT-002 |
 | ISSUE-021 | 分类阶段三 THINK_EMPTY 导致所有任务无法交付（P0） | 已观察（4/4 复现） | 高 | 平台层 / 2026-10-29 |
+| ISSUE-022 | 平台令牌有效期短，复测前需重新获取 | 环境限制 | 低 | 平台层 / 2026-11-04 |
+| ISSUE-023 | 健康检查不校验认证，health 通过不代表平台可用 | 已观察 | 中 | 平台层 / 2026-11-04 |
+| ISSUE-024 | Harness 短 ASCII token 判定曾因纯子串匹配误判 | 已确认并修复 | 中 | Harness 自测 / 2026-11-04 |
 
 ---
 
@@ -424,3 +427,59 @@ RuntimeError: classification_phase3 failed:
 
 - 平台侧：分类阶段对 `THINK_EMPTY` 做重试或降级（错误本身标记 `retryable: True`），而不是直接 `RuntimeError` 终止整轮；
 - 测试侧：在 `model_contract_error` 下继续保留 4 条证据，待平台恢复后重跑同一组用例对比。
+
+---
+
+## 8. v5.0 迭代记录（2026-11-04）：重心转向平台层
+
+本轮把重心从"测源码行为"移到"测平台集成"，并补齐了 Harness 自身的有效性证明。
+
+### 8.1 新增能力
+
+| 组件 | 作用 | 离线可跑 |
+|---|---|---|
+| `platform_probe.py` | 8 个只读健康探针（health / conversations / capability / shelf / mount / approval-level / pool / status），可保存与比对基线 | 需平台令牌 |
+| `run_all.py` | 统一回归入口：探针 → 平台层套件 → 模型层，产出统一报告 | 平台层需令牌 |
+| `mutants/run_harness_mutants.py` | 对 Harness 自身做变异测试 | ✅ 完全离线 |
+| PLAT-004 / PLAT-005 | 审批挂起、会话续聊用例 | 需平台令牌 |
+
+### 8.2 Harness 自测的变异测试（新增证据）
+
+对 Harness 自身的判定逻辑施加 14 个单一逻辑变异，分三类责任：
+
+| 责任类 | 变异数 | 识别 |
+|---|---|---|
+| 判定规则（judging） | 6 | 6/6 |
+| 失败分层（classification） | 5 | 5/5 |
+| 聚合统计（aggregation） | 3 | 3/3 |
+
+**最终 14/14 全部被识别（100%）**，证据在 `evidence/harness_mutants.json`。
+
+变异过程本身发现了三个真实问题（都是先存活、后修复）：
+
+1. **H05 存活**——`expect_final_answer_contains` 只有正向断言，没有反向断言，缺失时不会被发现；
+   修复：补 `test_missing_expected_text_blocks_success`、`test_partial_expected_text_blocks_success`。
+2. **H13 invalid**——变异片段与源码缩进不匹配，说明变异体定义与实现有漂移；
+   修复：改为精确匹配实际代码行。
+3. **新暴露的判定缺陷**——补反向断言后发现，短 ASCII token 用纯子串匹配会误判
+   （`"okay"` 会被认为包含 `"ok"`）；修复：新增 `contains_token()`，ASCII token 走词边界正则，
+   CJK token 保留子串语义，并补两个方向的测试。
+
+这三项都属于"Harness 自己会被自己的缺陷骗过去"，正是本轮做变异测试的意义。
+
+### 8.3 新增观察
+
+| 编号 | 观察 | 状态 |
+|---|---|---|
+| ISSUE-022 | 平台令牌有效期很短，多次复测前均需重新获取；`401` 响应体为中文业务错误 `token 不存在/已撤销/已过期` | 环境限制 |
+| ISSUE-023 | `/api/leucs/health` 在令牌过期时仍返回 200（探针 P01 通过），其余业务端点返回 401 | **平台可观测性问题** |
+
+ISSUE-023 值得注意：健康检查不校验认证，因此**健康探针"通过"不等于平台可用**。
+本轮探针把 `/api/leucs/health` 之外的 7 个端点都纳入，就是为了避免只看 health 就误判平台可用。
+
+### 8.4 待办（需平台可用时执行）
+
+- PLAT-004 审批挂起用例端到端；
+- PLAT-005 会话续聊（同一 `conversation_id` 内的第二轮）；
+- `--decision deny/approve` 的自动应答闭环；
+- 保存平台健康基线（`--save-baseline`）并周期性比对。

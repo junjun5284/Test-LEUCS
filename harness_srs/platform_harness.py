@@ -41,6 +41,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import ssl
 import sys
 import time
@@ -383,17 +384,36 @@ def load_cases(target: Path) -> List[Dict[str, Any]]:
     return [json.loads(target.read_text(encoding="utf-8"))]
 
 
+def contains_token(text: str, token: str) -> bool:
+    """Token presence with word-boundary awareness for ASCII tokens.
+
+    Plain substring matching is too weak for short ASCII tokens glued to other
+    word characters: "token" would be found inside "tokenize", and "ok" inside
+    "okay". A space or punctuation on either side *is* a valid boundary, so
+    "not ok" still counts as containing "ok" — that is a real word occurrence.
+
+    For CJK tokens we keep plain substring semantics, because Chinese has no
+    word separators.
+    """
+    if not token:
+        return False
+    if token.isascii() and any(ch.isalnum() for ch in token):
+        pattern = r"(?<![0-9A-Za-z_])" + re.escape(token) + r"(?![0-9A-Za-z_])"
+        return re.search(pattern, text) is not None
+    return token in text
+
+
 def judge_platform(case: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
     oracle = case.get("oracle") or {}
     final = result.get("final_answer") or ""
     tool_names = result.get("tool_names") or []
     checks: Dict[str, bool] = {"answer_present": bool(final.strip())}
     if oracle.get("expect_final_answer_contains"):
-        checks["contains"] = all(t in final for t in oracle["expect_final_answer_contains"])
+        checks["contains"] = all(contains_token(final, t) for t in oracle["expect_final_answer_contains"])
     if oracle.get("must_not_contain"):
-        checks["no_forbidden"] = not any(t in final for t in oracle["must_not_contain"])
+        checks["no_forbidden"] = not any(contains_token(final, t) for t in oracle["must_not_contain"])
     if oracle.get("refusal_any"):
-        checks["refusal"] = any(t in final for t in oracle["refusal_any"])
+        checks["refusal"] = any(contains_token(final, t) for t in oracle["refusal_any"])
     if oracle.get("forbidden_tools"):
         checks["no_forbidden_tool"] = not any(name in oracle["forbidden_tools"] for name in tool_names)
     if oracle.get("must_call_any"):
@@ -448,11 +468,37 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
     for case in cases:
         reps = args.repeat if args.repeat > 0 else int(case.get("repeat", 3))
         for rep in range(1, reps + 1):
-            result = run_chat(
-                base, token, case["message"], "", 1,
-                args.task_name, args.temperature, args.run_timeout, insecure, args.decision,
-            )
+            if case.get("follow_up"):
+                # Session-continuity case: run a first turn, then continue in the
+                # SAME conversation and judge the second turn.
+                first = run_chat(
+                    base, token, case["message"], "", 1,
+                    args.task_name, args.temperature, args.run_timeout, insecure, args.decision,
+                )
+                conv = first.get("conv_id") or ""
+                result = run_chat(
+                    base, token, case["follow_up"], conv, 2,
+                    args.task_name, args.temperature, args.run_timeout, insecure, args.decision,
+                )
+                result["first_turn"] = {
+                    "conv_id": conv,
+                    "final_answer": redact(first.get("final_answer") or "", token),
+                    "error_type": first.get("error_type"),
+                    "turn_index": 1,
+                }
+                result["continued_in_same_conversation"] = bool(conv) and result.get("conv_id") == conv
+            else:
+                result = run_chat(
+                    base, token, case["message"], "", 1,
+                    args.task_name, args.temperature, args.run_timeout,
+                    insecure, args.decision,
+                )
             judgement = judge_platform(case, result)
+            if case.get("follow_up") and not result.get("continued_in_same_conversation"):
+                judgement["success"] = False
+                judgement["checks"]["same_conversation"] = False
+            elif case.get("follow_up"):
+                judgement["checks"]["same_conversation"] = True
             record = summarize("suite_run", result, {
                 "case_id": case["case_id"],
                 "title": case.get("title", ""),
@@ -460,6 +506,9 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
                 "rep": rep,
                 "judgement": judgement,
             })
+            if case.get("follow_up"):
+                record["first_turn"] = result.get("first_turn")
+                record["continued_in_same_conversation"] = result.get("continued_in_same_conversation")
             if result.get("events"):
                 record["events_file"] = str(save_events(record["run_id"], result["events"], token))
             append_evidence(record)

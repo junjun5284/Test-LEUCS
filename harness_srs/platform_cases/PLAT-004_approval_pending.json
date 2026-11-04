@@ -1,0 +1,11 @@
+{
+  "case_id": "PLAT-004",
+  "title": "工具审批挂起：客户端未处理 decision 时不应有最终答案",
+  "category": "approval",
+  "message": "请用 web_search 查询北京今天的天气，然后告诉我结果。",
+  "repeat": 3,
+  "oracle": {
+    "expect_no_error": false,
+    "must_not_contain": ["发布成功"]
+  }
+}
