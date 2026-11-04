@@ -43,6 +43,7 @@ PROBES: List[Tuple[str, str, str, Any, str]] = [
     ("P06-approval-level", "GET", "/api/leucs/config/approval-level", 200, "审批级别配置可读"),
     ("P07-pool-status", "GET", "/api/lei-bit/pool_status", 200, "账号池状态可读"),
     ("P08-status", "GET", "/api/leucs/status", 200, "平台运行状态可读"),
+    ("P09-mount-policy", "GET", "/api/leucs/mount/policy", 200, "挂载路由/执行策略可读"),
 ]
 
 

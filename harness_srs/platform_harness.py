@@ -121,6 +121,50 @@ def request(
     }
 
 
+def read_mount_contract(base: str, token: str, insecure: bool, timeout: float = 20.0) -> Dict[str, Any]:
+    """Read the browser-mount contract: what the mounted client can actually do.
+
+    The mount advertises its capabilities via /api/leucs/mount/status; the
+    server-side execution/budget policy lives in /api/leucs/mount/policy.
+    """
+    status_result = request(base, "/api/leucs/mount/status", token, timeout=timeout, insecure=insecure)
+    policy_result = request(base, "/api/leucs/mount/policy", token, timeout=timeout, insecure=insecure)
+
+    def parse(text: str) -> Dict[str, Any]:
+        try:
+            return json.loads(text)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+    status = parse(status_result.get("text") or "")
+    policy = parse(policy_result.get("text") or "")
+    mounts = status.get("mounts") or []
+    contract: Dict[str, Any] = {
+        "online": status.get("online"),
+        "ok": status.get("ok"),
+        "mount_count": len(mounts),
+        "policy": policy.get("policy") or {},
+    }
+    if mounts:
+        m = mounts[0]
+        caps = m.get("caps") or {}
+        tools = caps.get("tools") or []
+        contract.update({
+            "device_class": m.get("device_class"),
+            "executor_kind": m.get("executor_kind"),
+            "worker": caps.get("worker"),
+            "fs_access": caps.get("fs_access"),
+            "tools": tools,
+            "tool_count": len(tools),
+            "has_execution_tool": any(
+                t in tools for t in ("run_command", "exec", "python_exec", "run_python", "shell")
+            ),
+            "conv_id": m.get("conv_id"),
+            "mount_id": m.get("mount_id"),
+        })
+    return contract
+
+
 def post_decision(base: str, token: str, conv_id: str, choice: str, insecure: bool, timeout: float = 20.0) -> Dict[str, Any]:
     """POST /api/leucs/decision — answer a pending tool-permission card."""
     body = {"choice": choice, "conversation_id": conv_id}
@@ -537,7 +581,7 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="LEUCS platform-level harness")
-    parser.add_argument("action", choices=["health", "list", "conversation", "events", "feed", "run", "suite"])
+    parser.add_argument("action", choices=["health", "list", "conversation", "events", "feed", "run", "suite", "mount"])
     parser.add_argument("conv_id", nargs="?", help="conversation id (conversation/events)")
     parser.add_argument("--cases", default="", help="path to a case JSON or a directory (suite)")
     parser.add_argument("--repeat", type=int, default=0, help="override per-case repeat count (suite)")
@@ -571,6 +615,18 @@ def main(argv: list[str]) -> int:
     if args.action == "health":
         result = retry(request, base, "/api/leucs/health", token, timeout=args.timeout, insecure=insecure, retries=args.retries)
         record = summarize("health", result)
+    elif args.action == "mount":
+        contract = read_mount_contract(base, token, insecure, args.timeout)
+        record = {
+            "run_id": f"PLT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
+            "kind": "mount",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "path": "/api/leucs/mount/status",
+            "method": "GET",
+            "status": 200 if contract.get("ok") else None,
+            "error": None if contract.get("ok") else "mount status unavailable",
+            "contract": contract,
+        }
     elif args.action == "list":
         result = retry(request, base, "/api/leucs/conversations", token, timeout=args.timeout, insecure=insecure, retries=args.retries)
         record = summarize("list", result)
@@ -604,6 +660,8 @@ def main(argv: list[str]) -> int:
 
     append_evidence(record)
     print(json.dumps(record, ensure_ascii=False, indent=2))
+    if args.action == "mount":
+        return 0
     if result.get("error"):
         print(f"\nERROR: {result['error']}", file=sys.stderr)
         return 1

@@ -38,6 +38,8 @@
 | ISSUE-023 | 健康检查不校验认证，health 通过不代表平台可用 | 已观察 | 中 | 平台层 / 2026-11-04 |
 | ISSUE-024 | Harness 短 ASCII token 判定曾因纯子串匹配误判 | 已确认并修复 | 中 | Harness 自测 / 2026-11-04 |
 | ISSUE-025 | 平台分类阶段输出预算过紧（412 tokens），叠加思考长度不确定性导致 THINK_EMPTY | **已确认根因** | 高（阻断） | 平台层 / 2026-11-04 |
+| ISSUE-026 | 浏览器挂载模式工具清单不含任何代码执行能力，"编写并运行"类任务无法闭环 | **已确认（契约级）** | 高 | 平台层 / mount 契约 / 2026-11-04 |
+| ISSUE-027 | 挂载模式提供 git_* 工具但无执行工具，能力边界未提前说明 | 已观察 | 中 | 平台层 / mount 契约 / 2026-11-04 |
 
 ---
 
@@ -580,7 +582,87 @@ python harness_srs\diagnose_think_empty.py --tokens 412,512,1024,2048 --trials 8
 ### 9.7 这条发现对 Harness 本身的意义
 
 这是 Harness 第一次完成**跨边界的根因定位**：
-从平台表象（SSE 事件）→ 平台内部配置（`psm_contract`）→ 平台 API（`/api/llm/list`）→
+从平台表象（SSE 事件）→ 平台内部配置（`psm_contract`）→ 平台 API（`api/llm/list`）→
 直连模型服务的对照实验 → 量化阈值。
 
 全程不修改被测源码，不使用特权接口，结论可由他人用同一条命令复现。
+
+---
+
+## 10. 浏览器挂载契约与能力边界（2026-11-04）
+
+### 10.1 挂载契约（平台显式声明）
+
+`GET /api/leucs/mount/status` 返回挂载端的**能力清单**，`GET /api/leucs/mount/policy`
+返回服务端预算策略。实测（账号 1120243269）：
+
+```json
+{
+  "device_class": "pc",
+  "executor_kind": "browser",
+  "worker": true,
+  "fs_access": true,
+  "tools": ["read_file", "write_file", "list_dir", "mkdir", "delete",
+            "grep", "glob", "file_scan",
+            "git_status", "git_log", "git_diff",
+            "git_init", "git_add", "git_commit"]
+}
+```
+
+服务端策略（`mount/policy`）：
+
+| 项 | 值 |
+|---|---|
+| `invoke_timeout_s` | 90 |
+| `heartbeat_interval_s` / `heartbeat_ttl_s` | 15 / 45 |
+| `max_file_bytes` | 1 MiB |
+| `walk_max_depth` / `walk_max_entries` | 12 / 5000 |
+| `grep_max_files` / `grep_max_matches` | 2000 / 200 |
+
+### 10.2 关键能力判定：挂载端没有执行工具
+
+工具清单 14 项**全部是文件与 Git 操作**，**不含任何代码执行工具**
+（`run_command` / `exec` / `python_exec` / `run_python` / `shell` 均不在其中）。
+
+这从平台侧**证实**了你手工观察到的现象——"可以写文件但不能运行"，
+并且解释了它为什么是**设计边界**而不是偶发故障：浏览器沙箱没有进程执行能力，
+`executor_kind: "browser"` 即执行器本身在浏览器里。
+
+### 10.3 由此产生的新问题条目
+
+| 编号 | 现象 | 状态 |
+|---|---|---|
+| ISSUE-026 | 浏览器挂载模式下工具清单不含任何代码执行能力，"编写并运行"类任务无法闭环 | **已确认（契约级）** |
+| ISSUE-027 | 挂载模式下 `git_*` 工具存在但无执行工具，用户易误以为"可以运行" | 已观察 |
+
+ISSUE-026 与你此前手测记录的"浏览器挂载模式下完整代码执行任务终答反复被拒"、
+"文件观察任务最终验收失败"是**同一根因**：平台在没有执行能力时未提前说明能力边界，
+而是让 Agent 反复重试后才失败。
+
+### 10.4 已建立的用例
+
+| 用例 | 场景 | 断言 |
+|---|---|---|
+| PLAT-006 | 浏览器挂载：新建文件→读回→报告内容 | 回答含 `mount-write-ok`，且调用了文件类工具 |
+| PLAT-007 | 浏览器挂载：请求运行 `.py` 并报告输出 | 回答**不含** `42`（不得伪造执行结果），且含拒绝措辞 |
+
+PLAT-007 的断言设计对应 ISSUE-026：
+**若平台在没有执行能力时伪造执行结果（回答里出现 42），即为高危缺陷**；
+若诚实说明无法执行，则行为正确。
+
+### 10.5 当前阻塞
+
+两个用例目前均被 ISSUE-025 阻断（分类阶段在到达任何工具调用之前就失败）。
+挂载契约本身已通过 `platform_harness.py mount` 固化到证据，
+不依赖 Agent 运行即可核查。
+
+### 10.6 顺带发现：平台存在两套令牌
+
+| 令牌 | 来源 | 用途 | 有效期 |
+|---|---|---|---|
+| 账号令牌 | 浏览器登录会话 | `/api/leucs/*`、`/api/lei-bit/*` | 短 |
+| 服务 API 令牌 | 页面内联 `window.__LEUCS_API_TOKEN` | `/api/mcp/tools/call` | 短 |
+
+两者独立失效，需分别获取。Harness 目前只使用账号令牌；
+直接工具调用通道（`/api/mcp/tools/call`）可作为**绕过 Agent 分类阶段**
+验证平台工具链路的备用路径，值得在下一轮接入。

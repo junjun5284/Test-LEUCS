@@ -16,7 +16,7 @@ harness_srs/
   04_harness_implementation_design_note.md 实现设计笔记
   minimal_harness.py   最小可运行 Harness（mock，无需凭据）
   real_harness.py      模型层真实适配（AgentLoop + 真实 Provider）
-  platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite/decision）
+  platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite/decision/mount）
   platform_probe.py    平台健康探针（8 个只读端点 + 基线比对）
   run_all.py           统一回归入口（探针 → 平台层 → 模型层）
   diagnose_think_empty.py  跨边界缺陷定位（直连模型服务做参数扫描对照）
@@ -26,8 +26,8 @@ harness_srs/
   tests/test_harness_logic.py  Harness 自身逻辑自测（离线，23 项）
   cases/               模型层示例用例
   cases_real/          模型层真实用例
-  platform_cases/      平台层用例（PLAT-001~005）
-  evidence/            运行证据（JSONL / JSON / SSE 事件 / Markdown 报告 / 变异结果）
+  platform_cases/      平台层用例（PLAT-001~007：正常/工具边界/否定式约束/审批挂起/会话续聊/挂载读写/挂载执行拒绝）
+  evidence/            运行证据（JSONL / JSON / SSE 事件 / Markdown 报告 / 变异结果 / 根因量化）
 ```
 
 ## 快速开始（离线，无需凭据）
@@ -60,6 +60,17 @@ python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases 
 `--decision deny` 会自动调用 `POST /api/leucs/decision` 拒绝，`--decision approve` 则批准（仅在明确需要时使用）。
 
 平台运行证据写入 `evidence/platform_runs.jsonl`，完整 SSE 事件写入 `evidence/platform_events/`。
+
+## 挂载能力契约（需要平台令牌）
+
+```powershell
+python harness_srs\platform_harness.py mount
+```
+
+读取浏览器挂载端的**能力清单**与服务端预算策略，并自动判定关键能力边界
+（例如：工具清单是否含代码执行工具）。该判定不依赖 Agent 运行，
+因此不会被上游故障掩盖。已用于确认 ISSUE-026：浏览器挂载的 14 个工具
+全部是文件与 Git 操作，**不含任何代码执行能力**。
 
 ## 平台健康探针（需要平台令牌）
 
@@ -127,9 +138,10 @@ python harness_srs\mutants\run_harness_mutants.py
 ## 当前状态（2026-11-04）
 
 - Harness 自测 23 项全部通过；变异测试 14/14 全部被识别
-- 平台层用例 5 个（PLAT-001~005），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊
+- 平台层用例 7 个（PLAT-001~007），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊、挂载读写、挂载执行拒绝
 - 平台健康探针 8/8 通过，已保存基线
 - 已定位 ISSUE-025 根因：平台分类阶段输出预算固定 412 tokens，约 50%–75% 请求耗尽预算于 reasoning
-- 已记录问题 25 条，详见 `02_current_issue_list_and_prompt_methods.md`
+- 已确认 ISSUE-026：浏览器挂载工具清单（14 项）全部为文件/Git 操作，不含代码执行能力
+- 已记录问题 27 条，详见 `02_current_issue_list_and_prompt_methods.md`
 - 已知平台侧阻断：ISSUE-025 使分类阶段在多数请求上失败，
-  需平台提高分类阶段输出预算（或对 `retryable` 错误重试）后才能完成审批与续聊用例的端到端验证
+  需平台提高分类阶段输出预算（或对 `retryable` 错误重试）后才能完成审批、续聊与挂载用例的端到端验证

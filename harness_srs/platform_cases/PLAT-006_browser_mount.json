@@ -1,0 +1,12 @@
+{
+  "case_id": "PLAT-006",
+  "title": "浏览器挂载：可读可写，但无执行能力",
+  "category": "mount",
+  "message": "请在挂载目录中新建一个文件 harness_mount_probe.txt，内容写 mount-write-ok，然后读回该文件并把内容告诉我。",
+  "repeat": 3,
+  "oracle": {
+    "expect_no_error": true,
+    "expect_final_answer_contains": ["mount-write-ok"],
+    "must_call_any": ["read_file", "write_file", "file_scan", "list_dir", "glob", "grep"]
+  }
+}
