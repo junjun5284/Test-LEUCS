@@ -19,6 +19,7 @@ harness_srs/
   platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite/decision）
   platform_probe.py    平台健康探针（8 个只读端点 + 基线比对）
   run_all.py           统一回归入口（探针 → 平台层 → 模型层）
+  diagnose_think_empty.py  跨边界缺陷定位（直连模型服务做参数扫描对照）
   reclassify_platform.py  从不可变证据离线重算失败分层
   report_platform.py   从证据离线生成 Markdown 报告
   mutants/             对 Harness 自身的变异测试
@@ -71,6 +72,20 @@ python harness_srs\platform_probe.py --compare-baseline   # 与基线比对，�
 只读、不触发 Agent 运行、不产生会话副作用。**注意**：健康端点在令牌过期时仍返回 200，
 所以探针覆盖了 8 个业务端点而不是只看 health。
 
+## 跨边界缺陷定位（需要模型凭据）
+
+```powershell
+$env:STUDENT_AGENT_API_KEY = "..."
+$env:LEUCS_BASE_URL = "https://maas.bit.edu.cn/v1"
+$env:LEUCS_MODEL = "deepseek-v4-flash"
+python harness_srs\diagnose_think_empty.py --tokens 412,512,1024,2048 --trials 8
+```
+
+用**同一提示词**直连模型服务，扫描 `max_tokens`，区分"模型故障 / 提示词错误 / 平台解析错误 /
+平台预算缺陷"。已用于定位 ISSUE-025（平台分类阶段输出预算固定 412 tokens，
+导致约 50%–75% 的请求把预算耗尽在 reasoning 上，`content` 为空 → `THINK_EMPTY`）。
+证据：`evidence/think_empty_diagnosis.json`。
+
 ## 统一回归入口
 
 ```powershell
@@ -113,6 +128,8 @@ python harness_srs\mutants\run_harness_mutants.py
 
 - Harness 自测 23 项全部通过；变异测试 14/14 全部被识别
 - 平台层用例 5 个（PLAT-001~005），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊
-- 已记录问题 24 条，详见 `02_current_issue_list_and_prompt_methods.md`
-- 已知平台侧阻塞：`classification_phase3` 的 `THINK_EMPTY` 会终止整轮（ISSUE-021），
-  需平台恢复后才能完成审批与续聊用例的端到端验证
+- 平台健康探针 8/8 通过，已保存基线
+- 已定位 ISSUE-025 根因：平台分类阶段输出预算固定 412 tokens，约 50%–75% 请求耗尽预算于 reasoning
+- 已记录问题 25 条，详见 `02_current_issue_list_and_prompt_methods.md`
+- 已知平台侧阻断：ISSUE-025 使分类阶段在多数请求上失败，
+  需平台提高分类阶段输出预算（或对 `retryable` 错误重试）后才能完成审批与续聊用例的端到端验证

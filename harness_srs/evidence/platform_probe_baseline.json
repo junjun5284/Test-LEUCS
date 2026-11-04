@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "saved_at": "2026-11-04T05:54:50.995847+00:00",
+  "base": "https://123.57.180.120",
+  "summary": {
+    "probes": 8,
+    "passed": 8,
+    "failed": 0,
+    "verdict": "healthy",
+    "failed_ids": []
+  },
+  "probes": [
+    {
+      "probe_id": "P01-health",
+      "path": "/api/leucs/health",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P02-conversations",
+      "path": "/api/leucs/conversations",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P03-leucs-capability",
+      "path": "/api/leucs/capability_directory",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P04-mcp-shelf",
+      "path": "/api/leucs_mcp/shelf",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P05-mount-status",
+      "path": "/api/leucs/mount/status",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P06-approval-level",
+      "path": "/api/leucs/config/approval-level",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P07-pool-status",
+      "path": "/api/lei-bit/pool_status",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    },
+    {
+      "probe_id": "P08-status",
+      "path": "/api/leucs/status",
+      "expect_status": 200,
+      "status": 200,
+      "verdict": "pass"
+    }
+  ]
+}

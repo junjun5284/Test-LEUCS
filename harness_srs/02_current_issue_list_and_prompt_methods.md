@@ -33,10 +33,11 @@
 | ISSUE-018 | 平台运行接口间歇性 502 / 空事件流 | 已观察 | 中 | 平台层 / PLAT-003 |
 | ISSUE-019 | 工具参数 schema 与模型习惯不一致（request/query） | 已观察 | 中 | 平台层 / PLAT-002 |
 | ISSUE-020 | 服务端 shell 工具跨环境执行（darwin/zsh） | 已观察 | 中 | 平台层 / PLAT-002 |
-| ISSUE-021 | 分类阶段三 THINK_EMPTY 导致所有任务无法交付（P0） | 已观察（4/4 复现） | 高 | 平台层 / 2026-10-29 |
+| ISSUE-021 | 分类阶段三 THINK_EMPTY 导致所有任务无法交付（P0） | **已确认根因** | 高 | 平台层 / 2026-10-29 → 2026-11-04 定位 |
 | ISSUE-022 | 平台令牌有效期短，复测前需重新获取 | 环境限制 | 低 | 平台层 / 2026-11-04 |
 | ISSUE-023 | 健康检查不校验认证，health 通过不代表平台可用 | 已观察 | 中 | 平台层 / 2026-11-04 |
 | ISSUE-024 | Harness 短 ASCII token 判定曾因纯子串匹配误判 | 已确认并修复 | 中 | Harness 自测 / 2026-11-04 |
+| ISSUE-025 | 平台分类阶段输出预算过紧（412 tokens），叠加思考长度不确定性导致 THINK_EMPTY | **已确认根因** | 高（阻断） | 平台层 / 2026-11-04 |
 
 ---
 
@@ -483,3 +484,103 @@ ISSUE-023 值得注意：健康检查不校验认证，因此**健康探针"通�
 - PLAT-005 会话续聊（同一 `conversation_id` 内的第二轮）；
 - `--decision deny/approve` 的自动应答闭环；
 - 保存平台健康基线（`--save-baseline`）并周期性比对。
+
+---
+
+## 9. ISSUE-025 根因定位：平台分类阶段输出预算过紧（2026-11-04）
+
+这是本项目至今定位最深的一个平台缺陷，结论是**可复现、可量化、可归因**的。
+
+### 9.1 现象
+
+平台运行接口 `/api/lei-bit/chat` 在多数请求上于**分类阶段三**终止：
+
+```text
+RuntimeError: classification_phase3 failed:
+{'type': 'error', 'error_code': 'THINK_EMPTY',
+ 'category': 'response_contract',
+ 'message': '响应只有思考，没有正文或原生工具调用',
+ 'suggestion': '根据实际完成标记与响应协议处理本次未交付结果',
+ 'retryable': True}
+```
+
+实测：2026-11-04 套件 14 次运行中 13 次失败，全部为该错误；2026-10-29 复测 4/4 同样失败；
+2026-10-28 同一套件 PLAT-001 曾 3/3 成功 —— 属**回归**。
+
+### 9.2 排除法：不是模型服务、不是提示词、不是平台解析
+
+**① 模型服务正常**：直接调用模型服务，`content` 与 `reasoning_content` 均正常返回。
+
+**② 提示词正常**：用平台自己的分类协议提示词直接请求模型，模型正确输出完整协议
+（`CLASSIFICATION` / `TASK_TYPE` / `TASK_CONTRACT` …）。
+
+**③ 平台解析无误**：平台 SSE 事件里 `reasoning_chunk` 完整拼回的思考文本显示，
+模型其实**已经算出了答案**（`TASK_TYPE: simple`、`TASK_CONTRACT: implementation=false…`），
+只是这些内容全部落在 reasoning 里，`content` 为空。
+
+### 9.3 真正原因：输出预算不足以容纳思考 + 正文
+
+平台在分类阶段把输出预算固定为 **412 tokens**（SSE `api_call_start.psm_contract.output_tokens = 412`），
+与运行时配置（`max_output`）无关，也**无法由客户端覆盖**（已试 `max_tokens`、
+`max_output_tokens`、`classification_max_tokens`、`budget.max_tokens` 四种请求字段，均无效）。
+
+固定提示词 + 固定温度下的重复实验（每格 8 次）：
+
+| max_tokens | temp | content 正常 | finish_reason=length | reasoning_tokens |
+|---:|---:|---:|---:|---|
+| 412 | 0.15 | **4/8** | 6/8 | 多次打满 412 |
+| 412 | 0.30 | **2/8** | 6/8 | 多次打满 412 |
+| 512 | 0.15 | 6/8 | 5/8 | 384–512 |
+| 512 | 0.30 | 5/8 | 3/8 | 61–512 |
+| 1024 | 0.15 | **8/8** | 0/8 | 44–824 |
+| 1024 | 0.30 | **8/8** | 0/8 | 92–887 |
+| 2048 | 0.15 | **8/8** | 0/8 | 151–742 |
+| 2048 | 0.30 | **8/8** | 0/8 | 51–759 |
+
+结论：
+
+- `max_tokens=412` 时，模型有 50%–75% 的概率把全部预算用于 reasoning，
+  `content=null`、`finish_reason=length` —— 这正是 `THINK_EMPTY` 的来源；
+- `max_tokens ≥ 1024` 时 **100% 正常**；
+- 因此这是**输出预算过紧**与**思考长度不确定**两个因素叠加的结果，
+  平台把 `finish_reason=length` 的响应误判为"只有思考"，文案也因此不准
+  （实际是"预算耗尽"，不是"只有思考"）。
+
+### 9.4 责任归属
+
+| 环节 | 判定 |
+|---|---|
+| 模型服务 | 正常 |
+| 提示词 | 正常 |
+| 平台输出预算 | **过紧，且不可配置** ← 缺陷所在 |
+| 平台错误分类与文案 | **不准确**，把 length 耗尽说成"只有思考" |
+| 平台失败处理 | **缺少重试/降级**：错误自带 `retryable: True` 仍直接终止整轮 |
+
+### 9.5 复现方式
+
+```powershell
+$env:STUDENT_AGENT_API_KEY = "..."
+$env:LEUCS_BASE_URL = "https://maas.bit.edu.cn/v1"
+$env:LEUCS_MODEL = "deepseek-v4-flash"
+python harness_srs\diagnose_think_empty.py --tokens 412,512,1024,2048 --trials 8
+```
+
+证据：`evidence/think_empty_diagnosis.json`
+
+### 9.6 建议
+
+1. **平台侧**：把分类阶段的输出预算提高到 ≥1024（可参考 `max_output` 可配置的做法），
+   或按"思考预算 + 正文预算"分别分配；
+2. **平台侧**：`finish_reason=length` 应归类为 `response_budget_exhausted`，
+   与 `THINK_EMPTY` 区分；
+3. **平台侧**：对 `retryable: True` 的错误做一次自动重试（实测 8/8 正常率下重试可显著提升成功率）；
+4. **测试侧**：Harness 已把该错误单独归为 `model_contract_error`，
+   不计入 Agent 行为失败率；待平台修复后用同一组用例回归对比。
+
+### 9.7 这条发现对 Harness 本身的意义
+
+这是 Harness 第一次完成**跨边界的根因定位**：
+从平台表象（SSE 事件）→ 平台内部配置（`psm_contract`）→ 平台 API（`/api/llm/list`）→
+直连模型服务的对照实验 → 量化阈值。
+
+全程不修改被测源码，不使用特权接口，结论可由他人用同一条命令复现。

@@ -1,21 +1,24 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-10-28T02:26:51.271750+00:00",
+  "generated_at": "2026-11-04T06:22:52.790744+00:00",
   "totals": {
-    "runs": 9,
-    "success": 3,
-    "success_rate": 0.333,
+    "runs": 15,
+    "success": 0,
+    "success_rate": 0.0,
     "infrastructure_error": 0,
-    "agent_failure": 0
+    "agent_failure": 0,
+    "error_type_distribution": {
+      "model_contract_error": 15
+    }
   },
   "by_case": {
     "PLAT-001": {
       "n": 3,
-      "success": 3,
+      "success": 0,
       "infrastructure_error": 0,
       "agent_failure": 0,
-      "success_rate": 1.0,
-      "avg_elapsed_seconds": 12.82
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 6.82
     },
     "PLAT-002": {
       "n": 3,
@@ -23,7 +26,7 @@
       "infrastructure_error": 0,
       "agent_failure": 0,
       "success_rate": 0.0,
-      "avg_elapsed_seconds": 151.04
+      "avg_elapsed_seconds": 7.7
     },
     "PLAT-003": {
       "n": 3,
@@ -31,89 +34,159 @@
       "infrastructure_error": 0,
       "agent_failure": 0,
       "success_rate": 0.0,
-      "avg_elapsed_seconds": 63.13
+      "avg_elapsed_seconds": 7.01
+    },
+    "PLAT-004": {
+      "n": 3,
+      "success": 0,
+      "infrastructure_error": 0,
+      "agent_failure": 0,
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 7.69
+    },
+    "PLAT-005": {
+      "n": 3,
+      "success": 0,
+      "infrastructure_error": 0,
+      "agent_failure": 0,
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 6.48
     }
   },
   "runs": [
     {
       "case_id": "PLAT-001",
       "rep": 1,
-      "run_id": "PLT-20261028021540378914",
-      "success": true,
-      "error_type": null,
-      "elapsed": 10.29,
-      "answer": "ok"
+      "run_id": "PLT-20261104062043619921",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 5.36,
+      "answer": ""
     },
     {
       "case_id": "PLAT-001",
       "rep": 2,
-      "run_id": "PLT-20261028021555876300",
-      "success": true,
-      "error_type": null,
-      "elapsed": 15.48,
-      "answer": "ok"
+      "run_id": "PLT-20261104062050843524",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 7.22,
+      "answer": ""
     },
     {
       "case_id": "PLAT-001",
       "rep": 3,
-      "run_id": "PLT-20261028021608575119",
-      "success": true,
-      "error_type": null,
-      "elapsed": 12.69,
-      "answer": "ok"
+      "run_id": "PLT-20261104062058760373",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 7.89,
+      "answer": ""
     },
     {
       "case_id": "PLAT-002",
       "rep": 1,
-      "run_id": "PLT-20261028021840714532",
+      "run_id": "PLT-20261104062106513622",
       "success": false,
-      "error_type": null,
-      "elapsed": 152.13,
+      "error_type": "model_contract_error",
+      "elapsed": 7.74,
       "answer": ""
     },
     {
       "case_id": "PLAT-002",
       "rep": 2,
-      "run_id": "PLT-20261028022111274641",
+      "run_id": "PLT-20261104062114071275",
       "success": false,
-      "error_type": null,
-      "elapsed": 150.54,
+      "error_type": "model_contract_error",
+      "elapsed": 7.55,
       "answer": ""
     },
     {
       "case_id": "PLAT-002",
       "rep": 3,
-      "run_id": "PLT-20261028022341768733",
+      "run_id": "PLT-20261104062121921065",
       "success": false,
-      "error_type": null,
-      "elapsed": 150.46,
+      "error_type": "model_contract_error",
+      "elapsed": 7.82,
       "answer": ""
     },
     {
       "case_id": "PLAT-003",
       "rep": 1,
-      "run_id": "PLT-20261028022612918355",
+      "run_id": "PLT-20261104062129274142",
       "success": false,
-      "error_type": null,
-      "elapsed": 151.1,
+      "error_type": "model_contract_error",
+      "elapsed": 7.34,
       "answer": ""
     },
     {
       "case_id": "PLAT-003",
       "rep": 2,
-      "run_id": "PLT-20261028022651214252",
+      "run_id": "PLT-20261104062136288457",
       "success": false,
-      "error_type": null,
-      "elapsed": 38.25,
+      "error_type": "model_contract_error",
+      "elapsed": 7.01,
       "answer": ""
     },
     {
       "case_id": "PLAT-003",
       "rep": 3,
-      "run_id": "PLT-20261028022651268506",
+      "run_id": "PLT-20261104062142979961",
       "success": false,
-      "error_type": null,
-      "elapsed": 0.05,
+      "error_type": "model_contract_error",
+      "elapsed": 6.68,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-004",
+      "rep": 1,
+      "run_id": "PLT-20261104062150763644",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 7.78,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-004",
+      "rep": 2,
+      "run_id": "PLT-20261104062159063210",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 8.29,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-004",
+      "rep": 3,
+      "run_id": "PLT-20261104062206073004",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 7.0,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-005",
+      "rep": 1,
+      "run_id": "PLT-20261104062218740044",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 6.13,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-005",
+      "rep": 2,
+      "run_id": "PLT-20261104062239842908",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 7.32,
+      "answer": ""
+    },
+    {
+      "case_id": "PLAT-005",
+      "rep": 3,
+      "run_id": "PLT-20261104062252783501",
+      "success": false,
+      "error_type": "model_contract_error",
+      "elapsed": 5.99,
       "answer": ""
     }
   ]
