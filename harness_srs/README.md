@@ -1,33 +1,88 @@
 # LEUCS 测试系统（Harness）
 
-面向 LEUCS 智能体平台的独立测试支撑项目：组织用例、驱动运行、采集证据、判定结果、沉淀问题。
+面向 Agent 平台的独立测试支撑项目：组织用例、驱动运行、采集证据、判定结果、沉淀问题。
 
 - 不修改被测系统源码
 - 证据以 `run_id` 串联：用例 → 运行 → 事件 → 判定 → 问题
-- 覆盖两层被测对象：模型层（AgentLoop + Provider）与平台层（网站 API + SSE）
+- **目标无关**：核心层不含任何平台知识，平台差异收敛在适配器
+- **可观察**：内置 Web 控制台，可看总览、运行详情、事件轨迹，并实时推送结果
+
+## 快速开始
+
+```powershell
+# 1) 离线最小演示（无需任何凭据）
+python harness_srs\minimal_harness.py harness_srs\cases\sample_publish.json
+
+# 2) Web 控制台（推荐的可视化入口）
+python harness_srs\dashboard.py --port 8801
+#    浏览器打开 http://127.0.0.1:8801
+
+# 3) 统一 CLI
+python harness_srs\harness_cli.py adapters      # 列出可用适配器
+python harness_srs\harness_cli.py cases         # 列出用例
+python harness_srs\harness_cli.py run           # 运行套件
+python harness_srs\harness_cli.py summary       # 汇总历史证据
+```
 
 ## 目录
 
 ```text
 harness_srs/
-  01_SRS_LEUCS_Testing_Agent_Harness.md   SRS v5.0（含平台层接口与探针/回归需求）
-  02_current_issue_list_and_prompt_methods.md  问题列表 v5.0（ISSUE-001~024）
-  03_合并版问题列表与SRS修订建议.md        早期合并稿（历史参考）
-  04_harness_implementation_design_note.md 实现设计笔记
+  core/__init__.py          通用核心：oracle 判定 / 聚合 / 证据存储 / 适配器注册
+  adapters/__init__.py      LEUCS 适配器（平台知识全部在这里）
+  dashboard.py              Web 控制台（总览 / 运行列表 / 详情 / 事件轨迹 / 实时流）
+  harness_cli.py            统一命令行入口
+  docs/ADAPTER_GUIDE.md     如何为别的平台写适配器
+  01_SRS_LEUCS_Testing_Agent_Harness.md   SRS v6.0
+  02_current_issue_list_and_prompt_methods.md  问题列表 v5.2（ISSUE-001~030）
   minimal_harness.py   最小可运行 Harness（mock，无需凭据）
   real_harness.py      模型层真实适配（AgentLoop + 真实 Provider）
   platform_harness.py  平台层适配（health/list/conversation/events/feed/run/suite/decision/mount）
-  platform_probe.py    平台健康探针（8 个只读端点 + 基线比对）
+  platform_probe.py    平台健康探针（9 个只读端点 + 基线比对）
   run_all.py           统一回归入口（探针 → 平台层 → 模型层）
   diagnose_think_empty.py  跨边界缺陷定位（直连模型服务做参数扫描对照）
   reclassify_platform.py  从不可变证据离线重算失败分层
   report_platform.py   从证据离线生成 Markdown 报告
-  mutants/             对 Harness 自身的变异测试
-  tests/test_harness_logic.py  Harness 自身逻辑自测（离线，23 项）
+  mutants/             对通用核心与平台层判定的变异测试
+  tests/               自测（离线，52 项）
   cases/               模型层示例用例
   cases_real/          模型层真实用例
   platform_cases/      平台层用例（PLAT-001~007：正常/工具边界/否定式约束/审批挂起/会话续聊/挂载读写/挂载执行拒绝）
   evidence/            运行证据（JSONL / JSON / SSE 事件 / Markdown 报告 / 变异结果 / 根因量化）
+```
+
+## Web 控制台
+
+```powershell
+python harness_srs\dashboard.py --port 8801
+```
+
+打开 http://127.0.0.1:8801 可以看到：
+
+| 区域 | 内容 |
+|---|---|
+| 总览 | 运行总数、成功率、基础设施错误数、超时数、证据文件数 |
+| 运行记录 | 可按用例 / 类型 / 判定筛选，点击查看详情 |
+| 用例统计 | 每个用例的 n、成功数、成功率条、平均耗时 |
+| 运行详情 | 每个断言的通过情况、最终回答、错误信息、用量、工具发现分析、**完整事件轨迹** |
+
+运行套件时，新结果通过 SSE **实时推送**，无需刷新页面。
+
+## 接入其他被测系统
+
+Harness 的核心不认识 LEUCS，只认识"用例 → 运行 → 判定 → 证据"。
+新增目标只需写一个适配器（四个方法），即可自动获得判定、聚合、
+不可变证据、Web 控制台、回归入口、自测与变异测试。
+
+详见 `docs/ADAPTER_GUIDE.md`。
+
+```python
+class MyAdapter:
+    name = "my-target"
+    def describe(self): ...
+    def list_cases(self): ...
+    def run_case(self, case, repetition): ...
+    def list_runs(self): ...
 ```
 
 ## 快速开始（离线，无需凭据）
@@ -111,17 +166,17 @@ python harness_srs\run_all.py --model-only
 
 串联健康探针 → 平台层套件 → 模型层，产出 `evidence/regression_report.md` 与
 `evidence/regression_report.json`。
-## Harness 自测与变异测试（离线，无凭据）
+## 自测与变异测试（离线，无凭据）
 
 ```powershell
 python -m unittest discover -s harness_srs/tests -p "test_*.py" -v
-python harness_srs\report_platform.py
-python harness_srs\mutants\run_harness_mutants.py
+python harness_srs\mutants\run_core_mutants.py       # 通用核心 12 个变异体
+python harness_srs\mutants\run_harness_mutants.py   # 平台层判定 14 个变异体
 ```
 
-自测覆盖：oracle 判定（文本/工具/工具禁止/错误分层/词边界）、套件聚合、用例加载、失败分层重算。
-变异测试对 **Harness 自身**的判定逻辑施加 14 个单一逻辑变异，检验"断言是否真的在断言"；
-存活变异体即自测缺口，结果写入 `evidence/harness_mutants.json`。
+变异测试对**判定逻辑**施加单一逻辑变异，检验"断言是否真的在断言"；
+存活变异体即自测缺口。结果写入 `evidence/core_mutants.json` 与
+`evidence/harness_mutants.json`。
 
 ## 判定与失败分层
 
@@ -142,10 +197,12 @@ python harness_srs\mutants\run_harness_mutants.py
 
 ## 当前状态（2026-11-05）
 
-- Harness 自测 28 项全部通过；变异测试 14/14 全部被识别
+- 自测 52 项全部通过；变异测试：通用核心 12/12、平台层判定 14/14 全部被识别
 - 平台层用例 7 个（PLAT-001~007），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊、挂载读写、挂载执行拒绝
 - 平台健康探针 9/9 通过，已保存基线
-- **ISSUE-025 已闭环**：平台把分类阶段输出预算从 412 提到 1024 后症状消失，根因结论得到验证
+- Web 控制台可用：总览 / 运行列表 / 详情 / 事件轨迹 / SSE 实时流 / 界面触发运行
+- 核心层与平台层已分离，适配器契约见 `docs/ADAPTER_GUIDE.md`
+- **ISSUE-025 已闭环**：平台把分类阶段输出预算从 412 提到 1024 后症状消失
 - 已确认 ISSUE-026（挂载无执行能力）、ISSUE-029（挂载与会话强绑定）
 - 已定位 ISSUE-028（工具发现无界循环）、ISSUE-030（因果修复门禁自指死锁）
 - 已记录问题 30 条，详见 `02_current_issue_list_and_prompt_methods.md`

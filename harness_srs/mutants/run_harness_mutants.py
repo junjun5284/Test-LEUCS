@@ -49,6 +49,10 @@ def copy_harness(dest: Path) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     for name in HARNESS_FILES:
         shutil.copy2(SUBMISSION / name, dest / name)
+    for package in ("core", "adapters"):
+        source = SUBMISSION / package
+        if source.is_dir():
+            shutil.copytree(source, dest / package)
     shutil.copytree(TESTS_DIR, dest / "tests")
     shutil.copytree(SUBMISSION / "platform_cases", dest / "platform_cases")
     for cache in dest.rglob("__pycache__"):
