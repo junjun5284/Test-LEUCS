@@ -61,6 +61,8 @@ class Dashboard:
     def __init__(self, evidence_root: Path):
         self.evidence_root = Path(evidence_root)
         self.evidence_root.mkdir(parents=True, exist_ok=True)
+        # One evidence store per adapter, so switching targets in the UI shows
+        # that target's own history instead of the default one.
         self.adapters: Dict[str, Dict[str, Any]] = {
             "leucs": {
                 "name": "leucs",
@@ -73,15 +75,43 @@ class Dashboard:
                     "evidence_dir": str(self.evidence_root),
                 },
             },
+            "mock-target": {
+                "name": "mock-target",
+                "runs_file": self.evidence_root / "mock_runs.jsonl",
+                "events_dir": self.evidence_root / "mock_events",
+                "options": {
+                    "evidence_dir": str(self.evidence_root),
+                },
+            },
         }
         self.lock = threading.Lock()
         self.running: Dict[str, Any] = {"state": "idle", "adapter": None, "started": None, "done": 0, "total": 0}
 
     # ------------------------------------------------------------------ #
 
+    def _spec(self, adapter: str) -> Dict[str, Any]:
+        spec = self.adapters.get(adapter)
+        if spec is None:
+            raise KeyError(f"unknown adapter: {adapter}")
+        return spec
+
+    def sync_adapters(self) -> None:
+        """Register any adapter that exists in the registry but not yet here.
+
+        Adding a new adapter file must be enough for it to appear in the UI.
+        """
+        for spec in list_adapters():
+            if spec["name"] in self.adapters:
+                continue
+            self.adapters[spec["name"]] = {
+                "name": spec["name"],
+                "runs_file": self.evidence_root / f"{spec['name'].replace('-', '_')}_runs.jsonl",
+                "events_dir": self.evidence_root / f"{spec['name'].replace('-', '_')}_events",
+                "options": {},
+            }
+
     def store(self, adapter: str) -> EvidenceStore:
-        spec = self.adapters.get(adapter) or self.adapters["leucs"]
-        return EvidenceStore(spec["runs_file"])
+        return EvidenceStore(self._spec(adapter)["runs_file"])
 
     def runs(self, adapter: str, kind: Optional[str] = None, case_id: Optional[str] = None,
              limit: int = 500) -> List[Dict[str, Any]]:
@@ -98,8 +128,7 @@ class Dashboard:
         return None
 
     def events(self, adapter: str, run_id: str) -> List[Dict[str, Any]]:
-        spec = self.adapters.get(adapter) or self.adapters["leucs"]
-        path = spec["events_dir"] / f"{run_id}.json"
+        path = self._spec(adapter)["events_dir"] / f"{run_id}.json"
         if not path.is_file():
             return []
         try:
@@ -114,23 +143,21 @@ class Dashboard:
         for r in rows:
             by_kind[r.get("kind") or "?"] = by_kind.get(r.get("kind") or "?", 0) + 1
         result["totals"]["by_kind"] = by_kind
-        result["totals"]["evidence_files"] = len(list((self.adapters.get(adapter) or self.adapters["leucs"])["events_dir"].glob("*.json"))) \
-            if (self.adapters.get(adapter) or self.adapters["leucs"])["events_dir"].is_dir() else 0
+        events_dir = self._spec(adapter)["events_dir"]
+        result["totals"]["evidence_files"] = len(list(events_dir.glob("*.json"))) if events_dir.is_dir() else 0
         return result
 
     def cases(self, adapter: str) -> List[Dict[str, Any]]:
-        spec = self.adapters.get(adapter) or self.adapters["leucs"]
+        spec = self._spec(adapter)
         try:
-            instance = get_adapter(adapter, **{k: v for k, v in spec["options"].items()})
+            instance = get_adapter(adapter, **spec["options"])
         except Exception:
             return []
         return instance.list_cases()
-
     def trigger(self, adapter: str, case_ids: Optional[List[str]] = None, repeat: int = 0) -> Dict[str, Any]:
         with self.lock:
             if self.running["state"] == "running":
                 return {"started": False, "reason": "a run is already in progress"}
-            spec = self.adapters.get(adapter) or self.adapters["leucs"]
             self.running = {"state": "running", "adapter": adapter,
                             "started": datetime.now(timezone.utc).isoformat(),
                             "done": 0, "total": 0}
@@ -139,7 +166,7 @@ class Dashboard:
         return {"started": True, "adapter": adapter}
 
     def _run_worker(self, adapter: str, case_ids: Optional[List[str]], repeat: int) -> None:
-        spec = self.adapters.get(adapter) or self.adapters["leucs"]
+        spec = self._spec(adapter)
         try:
             instance = get_adapter(adapter, **spec["options"])
             cases = instance.list_cases()
@@ -474,6 +501,13 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def handle_one_request(self) -> None:
+        """Tolerate clients that disappear mid-request (e.g. closing the tab)."""
+        try:
+            super().handle_one_request()
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            self.close_connection = True
+
     def _json(self, payload: Any, code: int = 200) -> None:
         self._send(code, json.dumps(payload, ensure_ascii=False).encode("utf-8"),
                    "application/json; charset=utf-8")
@@ -488,6 +522,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, HTML.encode("utf-8"), "text/html; charset=utf-8")
                 return
             if path == "/api/adapters":
+                DASH.sync_adapters()
                 self._json(list_adapters())
                 return
             if path == "/api/summary":
@@ -511,8 +546,15 @@ class Handler(BaseHTTPRequestHandler):
                 self._stream_live()
                 return
             self._json({"error": "not found"}, 404)
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            # The client went away (e.g. browser closed the SSE tab). Nothing to
+            # report: the response socket is already gone.
+            return
         except Exception as exc:  # noqa: BLE001
-            self._json({"error": f"{type(exc).__name__}: {exc}"}, 500)
+            try:
+                self._json({"error": f"{type(exc).__name__}: {exc}"}, 500)
+            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+                pass
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
@@ -546,7 +588,8 @@ class Handler(BaseHTTPRequestHandler):
                     data = json.dumps({"type": "heartbeat"}, ensure_ascii=False)
                 self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
                 self.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError):
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError):
+            # Browser closed the tab / navigated away. Expected, not an error.
             pass
         finally:
             with _LOCK:
@@ -563,6 +606,7 @@ def main(argv: List[str]) -> int:
     args = parser.parse_args(argv)
 
     DASH = Dashboard(Path(args.evidence_dir))
+    DASH.sync_adapters()
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Harness dashboard: http://{args.host}:{args.port}")
     print(f"  evidence dir : {args.evidence_dir}")

@@ -33,10 +33,14 @@ def _adapter_options(adapter: str) -> Dict[str, Any]:
             "cases_dir": str(ROOT / "platform_cases"),
             "evidence_dir": str(ROOT / "evidence"),
         }
+    if adapter == "mock-target":
+        return {"evidence_dir": str(ROOT / "evidence")}
     return {}
 
 
 def _evidence_file(adapter: str) -> Path:
+    if adapter == "mock-target":
+        return ROOT / "evidence" / "mock_runs.jsonl"
     return ROOT / "evidence" / ("platform_runs.jsonl" if adapter == "leucs" else f"{adapter}_runs.jsonl")
 
 

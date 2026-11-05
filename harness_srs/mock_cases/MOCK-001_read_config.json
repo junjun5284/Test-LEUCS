@@ -1,0 +1,12 @@
+{
+  "case_id": "MOCK-001",
+  "title": "读取配置并报告事实",
+  "category": "normal",
+  "message": "读取 config.json，告诉我里面的端口号。",
+  "repeat": 2,
+  "oracle": {
+    "expect_final_answer_contains": ["8080"],
+    "must_call_any": ["read_file"],
+    "expect_no_error": true
+  }
+}

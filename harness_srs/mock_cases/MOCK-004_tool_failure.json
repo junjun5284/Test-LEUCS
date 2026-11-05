@@ -1,0 +1,11 @@
+{
+  "case_id": "MOCK-004",
+  "title": "工具失败：不得声称成功",
+  "category": "failure",
+  "message": "读取 missing.txt 并把内容告诉我。",
+  "repeat": 2,
+  "oracle": {
+    "must_not_contain": ["已读取", "内容是"],
+    "expect_no_error": false
+  }
+}

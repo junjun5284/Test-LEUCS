@@ -433,3 +433,10 @@ register_adapter(AdapterSpec(
     options=["base", "token", "cases_dir", "evidence_dir", "timeout", "run_timeout",
              "insecure", "decision", "task_name", "temperature", "use_mount"],
 ))
+
+# Optional adapters are registered on import; a missing optional dependency must
+# not break the package.
+try:  # pragma: no cover - optional
+    from . import mock_target  # noqa: F401
+except Exception as exc:  # pragma: no cover
+    print(f"[harness] optional adapter mock-target unavailable: {exc}")

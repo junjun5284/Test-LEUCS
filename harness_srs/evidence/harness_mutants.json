@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-05T15:09:13.544650+00:00",
+  "generated_at": "2026-11-05T15:17:33.347012+00:00",
   "baseline_outcome": "passed",
   "summary": {
     "mutants_total": 14,
@@ -43,9 +43,9 @@
       "violated_property": "调用禁用工具必须被判负",
       "expected_detector": "PLAT-002",
       "outcome": "killed",
-      "elapsed": 0.38,
+      "elapsed": 0.4,
       "detected_by": "test_forbidden_tool_blocks_success",
-      "evidence_tail": "FAIL: test_forbidden_tool_blocks_success (test_harness_logic.JudgePlatformTests.test_forbidden_tool_blocks_success)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H02_ajxeoz82\\harness\\tests\\test_harness_logic.py\", line 88, in test_forbidden_tool_blocks_success\n    self.assertFalse(verdict[\"checks\"][\"no_forbidden_tool\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.071s\n\nFAILED (failures=1)"
+      "evidence_tail": "FAIL: test_forbidden_tool_blocks_success (test_harness_logic.JudgePlatformTests.test_forbidden_tool_blocks_success)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H02__pmlwvyi\\harness\\tests\\test_harness_logic.py\", line 88, in test_forbidden_tool_blocks_success\n    self.assertFalse(verdict[\"checks\"][\"no_forbidden_tool\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.079s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H03",
@@ -55,9 +55,9 @@
       "violated_property": "没有最终回答的运行不得判为成功",
       "expected_detector": "PLAT-002",
       "outcome": "killed",
-      "elapsed": 0.38,
+      "elapsed": 0.4,
       "detected_by": "test_empty_answer_is_not_success",
-      "evidence_tail": "FAIL: test_empty_answer_is_not_success (test_harness_logic.JudgePlatformTests.test_empty_answer_is_not_success)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H03_bgmi_604\\harness\\tests\\test_harness_logic.py\", line 104, in test_empty_answer_is_not_success\n    self.assertFalse(verdict[\"success\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.072s\n\nFAILED (failures=1)"
+      "evidence_tail": "FAIL: test_empty_answer_is_not_success (test_harness_logic.JudgePlatformTests.test_empty_answer_is_not_success)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H03_d8kpv5_3\\harness\\tests\\test_harness_logic.py\", line 104, in test_empty_answer_is_not_success\n    self.assertFalse(verdict[\"success\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.076s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H04",
@@ -69,7 +69,7 @@
       "outcome": "killed",
       "elapsed": 0.39,
       "detected_by": "test_infrastructure_error_cannot_pass_even_if_text_matches",
-      "evidence_tail": "FAIL: test_infrastructure_error_cannot_pass_even_if_text_matches (test_harness_logic.JudgePlatformTests.test_infrastructure_error_cannot_pass_even_if_text_matches)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H04_iyu8_vbu\\harness\\tests\\test_harness_logic.py\", line 99, in test_infrastructure_error_cannot_pass_even_if_text_matches\n    self.assertFalse(verdict[\"success\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.076s\n\nFAILED (failures=1)"
+      "evidence_tail": "FAIL: test_infrastructure_error_cannot_pass_even_if_text_matches (test_harness_logic.JudgePlatformTests.test_infrastructure_error_cannot_pass_even_if_text_matches)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H04_wfemd3lb\\harness\\tests\\test_harness_logic.py\", line 99, in test_infrastructure_error_cannot_pass_even_if_text_matches\n    self.assertFalse(verdict[\"success\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.075s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H05",
@@ -89,9 +89,9 @@
       "violated_property": "必须调用指定工具时不得无条件放行",
       "expected_detector": "PLAT-001",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.38,
       "detected_by": "test_must_call_tool_requires_expected_tool",
-      "evidence_tail": "FAIL: test_must_call_tool_requires_expected_tool (test_harness_logic.JudgePlatformTests.test_must_call_tool_requires_expected_tool)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H06_63x5kwy1\\harness\\tests\\test_harness_logic.py\", line 93, in test_must_call_tool_requires_expected_tool\n    self.assertTrue(platform_harness.judge_platform(case, result(final_answer=\"x\", tool_names=[\"list_files\"]))[\"checks\"][\"must_call_tool\"] is False)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true\n\n----------------------------------------------------------------------\nRan 52 tests in 0.071s\n\nFAILED (failures=1)"
+      "evidence_tail": "FAIL: test_must_call_tool_requires_expected_tool (test_harness_logic.JudgePlatformTests.test_must_call_tool_requires_expected_tool)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H06_1krb3gjs\\harness\\tests\\test_harness_logic.py\", line 93, in test_must_call_tool_requires_expected_tool\n    self.assertTrue(platform_harness.judge_platform(case, result(final_answer=\"x\", tool_names=[\"list_files\"]))[\"checks\"][\"must_call_tool\"] is False)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: False is not true\n\n----------------------------------------------------------------------\nRan 52 tests in 0.073s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H07",
@@ -101,9 +101,9 @@
       "violated_property": "存在待审批决策时不得判为正常完成",
       "expected_detector": "PLAT-002",
       "outcome": "killed",
-      "elapsed": 0.37,
+      "elapsed": 0.38,
       "detected_by": "test_decision_event_maps_to_awaiting_approval",
-      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H07_kbt61wnd\\harness\\tests\\test_harness_logic.py\", line 215, in test_decision_event_maps_to_awaiting_approval\n    self.assertEqual(reclassify.classify(record, events), \"awaiting_approval\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'awaiting_approval'\n- ok\n+ awaiting_approval\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.072s\n\nFAILED (failures=1)"
+      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H07_mxbl2dxp\\harness\\tests\\test_harness_logic.py\", line 215, in test_decision_event_maps_to_awaiting_approval\n    self.assertEqual(reclassify.classify(record, events), \"awaiting_approval\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'awaiting_approval'\n- ok\n+ awaiting_approval\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.077s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H08",
@@ -113,9 +113,9 @@
       "violated_property": "分类契约被拒时不得判为正常完成",
       "expected_detector": "PLAT-003",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.4,
       "detected_by": "test_contract_rejected_maps_to_classification_rejected",
-      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H08_6cja6ywk\\harness\\tests\\test_harness_logic.py\", line 220, in test_contract_rejected_maps_to_classification_rejected\n    self.assertEqual(reclassify.classify(record, events), \"classification_rejected\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'classification_rejected'\n- ok\n+ classification_rejected\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.072s\n\nFAILED (failures=1)"
+      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H08_201kqyi_\\harness\\tests\\test_harness_logic.py\", line 220, in test_contract_rejected_maps_to_classification_rejected\n    self.assertEqual(reclassify.classify(record, events), \"classification_rejected\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'classification_rejected'\n- ok\n+ classification_rejected\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.078s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H09",
@@ -125,9 +125,9 @@
       "violated_property": "模型响应契约错误必须与 Agent 行为失败分开归类",
       "expected_detector": "PLAT-003",
       "outcome": "killed",
-      "elapsed": 0.38,
+      "elapsed": 0.4,
       "detected_by": "test_think_empty_maps_to_model_contract_error",
-      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H09_6khcqyme\\harness\\tests\\test_harness_logic.py\", line 241, in test_think_empty_maps_to_model_contract_error\n    self.assertEqual(reclassify.classify(record, []), \"model_contract_error\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'agent_failure' != 'model_contract_error'\n- agent_failure\n+ model_contract_error\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.074s\n\nFAILED (failures=1)"
+      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H09_8l8xq5u3\\harness\\tests\\test_harness_logic.py\", line 241, in test_think_empty_maps_to_model_contract_error\n    self.assertEqual(reclassify.classify(record, []), \"model_contract_error\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'agent_failure' != 'model_contract_error'\n- agent_failure\n+ model_contract_error\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.078s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H10",
@@ -139,7 +139,7 @@
       "outcome": "killed",
       "elapsed": 0.4,
       "detected_by": "test_http_502_maps_to_infrastructure_error",
-      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H10_03ear8c3\\harness\\tests\\test_harness_logic.py\", line 224, in test_http_502_maps_to_infrastructure_error\n    self.assertEqual(reclassify.classify(record, []), \"infrastructure_error\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'infrastructure_error'\n- ok\n+ infrastructure_error\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.076s\n\nFAILED (failures=1)"
+      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H10_a3ogl831\\harness\\tests\\test_harness_logic.py\", line 224, in test_http_502_maps_to_infrastructure_error\n    self.assertEqual(reclassify.classify(record, []), \"infrastructure_error\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'infrastructure_error'\n- ok\n+ infrastructure_error\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.073s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H11",
@@ -149,9 +149,9 @@
       "violated_property": "没有最终回答且无其他信号时必须标记为流中断",
       "expected_detector": "PLAT-002",
       "outcome": "killed",
-      "elapsed": 0.4,
+      "elapsed": 0.41,
       "detected_by": "test_empty_stream_without_signal_maps_to_incomplete_stream",
-      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H11_zwv45_wk\\harness\\tests\\test_harness_logic.py\", line 232, in test_empty_stream_without_signal_maps_to_incomplete_stream\n    self.assertEqual(reclassify.classify(record, [{\"type\": \"phase\"}]), \"incomplete_stream\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'incomplete_stream'\n- ok\n+ incomplete_stream\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.079s\n\nFAILED (failures=1)"
+      "evidence_tail": "  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H11_dhugay7c\\harness\\tests\\test_harness_logic.py\", line 232, in test_empty_stream_without_signal_maps_to_incomplete_stream\n    self.assertEqual(reclassify.classify(record, [{\"type\": \"phase\"}]), \"incomplete_stream\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'ok' != 'incomplete_stream'\n- ok\n+ incomplete_stream\n\n\n----------------------------------------------------------------------\nRan 52 tests in 0.075s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "H12",
@@ -161,9 +161,9 @@
       "violated_property": "聚合时只能统计真正成功的运行",
       "expected_detector": "PLAT-002",
       "outcome": "killed",
-      "elapsed": 0.42,
+      "elapsed": 0.4,
       "detected_by": "test_all_failed_case_reports_zero_rate",
-      "evidence_tail": "聚合的 success_rate 必须由计数推导，不能被固定成 1（变异体 H13）。\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H12_2od7yqax\\harness\\tests\\test_harness_logic.py\", line 136, in test_success_rate_is_not_hardcoded\n    self.assertEqual(summary[\"by_case\"][\"A\"][\"success_rate\"], 0.0)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.0\n\n----------------------------------------------------------------------\nRan 52 tests in 0.074s\n\nFAILED (failures=3)"
+      "evidence_tail": "聚合的 success_rate 必须由计数推导，不能被固定成 1（变异体 H13）。\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H12_8bh7vtlb\\harness\\tests\\test_harness_logic.py\", line 136, in test_success_rate_is_not_hardcoded\n    self.assertEqual(summary[\"by_case\"][\"A\"][\"success_rate\"], 0.0)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.0\n\n----------------------------------------------------------------------\nRan 52 tests in 0.084s\n\nFAILED (failures=3)"
     },
     {
       "mutant_id": "H13",
@@ -173,9 +173,9 @@
       "violated_property": "成功率必须由实际计数计算，不得固定为 1",
       "expected_detector": "PLAT-002",
       "outcome": "killed",
-      "elapsed": 0.38,
+      "elapsed": 0.4,
       "detected_by": "test_all_failed_case_reports_zero_rate",
-      "evidence_tail": "聚合的 success_rate 必须由计数推导，不能被固定成 1（变异体 H13）。\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H13_k4qviwi7\\harness\\tests\\test_harness_logic.py\", line 136, in test_success_rate_is_not_hardcoded\n    self.assertEqual(summary[\"by_case\"][\"A\"][\"success_rate\"], 0.0)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.0\n\n----------------------------------------------------------------------\nRan 52 tests in 0.069s\n\nFAILED (failures=3)"
+      "evidence_tail": "聚合的 success_rate 必须由计数推导，不能被固定成 1（变异体 H13）。\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H13_ikrdfcch\\harness\\tests\\test_harness_logic.py\", line 136, in test_success_rate_is_not_hardcoded\n    self.assertEqual(summary[\"by_case\"][\"A\"][\"success_rate\"], 0.0)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.0\n\n----------------------------------------------------------------------\nRan 52 tests in 0.084s\n\nFAILED (failures=3)"
     },
     {
       "mutant_id": "H14",
@@ -185,9 +185,9 @@
       "violated_property": "错误类型分布必须按真实类型计数",
       "expected_detector": "PLAT-003",
       "outcome": "killed",
-      "elapsed": 0.41,
+      "elapsed": 0.38,
       "detected_by": "test_distribution_counts_each_error_type",
-      "evidence_tail": "FAIL: test_distribution_counts_each_error_type (test_harness_logic.AggregateTests.test_distribution_counts_each_error_type)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H14_yrld934o\\harness\\tests\\test_harness_logic.py\", line 123, in test_distribution_counts_each_error_type\n    self.assertEqual(summary[\"totals\"][\"error_type_distribution\"][\"ok\"], 1)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 3 != 1\n\n----------------------------------------------------------------------\nRan 52 tests in 0.077s\n\nFAILED (failures=1)"
+      "evidence_tail": "FAIL: test_distribution_counts_each_error_type (test_harness_logic.AggregateTests.test_distribution_counts_each_error_type)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\harness_mutant_H14_82mdiw14\\harness\\tests\\test_harness_logic.py\", line 123, in test_distribution_counts_each_error_type\n    self.assertEqual(summary[\"totals\"][\"error_type_distribution\"][\"ok\"], 1)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 3 != 1\n\n----------------------------------------------------------------------\nRan 52 tests in 0.066s\n\nFAILED (failures=1)"
     }
   ]
 }
