@@ -1,0 +1,144 @@
+[
+ {
+  "type": "queued",
+  "content": "已加入队列 (第 1 位)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "msg_id": "af718f15bedb42569b33afe4a7459eb0",
+  "position": 1,
+  "intent_version": 0,
+  "ts": 1793867353.771817
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 5s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 5.1,
+  "ts": 1793867358.848968
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 11s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 10.7,
+  "ts": 1793867364.462041
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 16s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 16.3,
+  "ts": 1793867370.10858
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 22s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 21.8,
+  "ts": 1793867375.598987
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 27s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 26.9,
+  "ts": 1793867380.639845
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 32s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 32.3,
+  "ts": 1793867386.094227
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 38s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 37.6,
+  "ts": 1793867391.336267
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 43s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 43.1,
+  "ts": 1793867396.832771
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 48s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 48.1,
+  "ts": 1793867401.885259
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 53s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 53.2,
+  "ts": 1793867406.926036
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 59s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 58.7,
+  "ts": 1793867412.510282
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 64s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 64.2,
+  "ts": 1793867417.943039
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 70s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 69.6,
+  "ts": 1793867423.366791
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 75s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 75.1,
+  "ts": 1793867428.868279
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 80s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 80.1,
+  "ts": 1793867433.869241
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 85s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 85.1,
+  "ts": 1793867438.913074
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 90s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 90.5,
+  "ts": 1793867444.24547
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 96s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 96.0,
+  "ts": 1793867449.737575
+ },
+ {
+  "type": "queued",
+  "content": "排队中 (已等待 101s)",
+  "conv_id": "8c77a05951b74a1ea2047d128e81f031",
+  "waited_s": 101.1,
+  "ts": 1793867454.867332
+ }
+]

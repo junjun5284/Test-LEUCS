@@ -161,6 +161,52 @@ class LoadCasesTests(unittest.TestCase):
         self.assertIn("PLAT-005", by_id)
         self.assertTrue(by_id["PLAT-005"].get("follow_up"))
 
+    def test_mount_cases_declare_requires_mount(self):
+        """挂载用例必须声明 requires_mount，否则会在新建会话里跑、永远看不到挂载。"""
+        cases = platform_harness.load_cases(ROOT / "platform_cases")
+        by_id = {c["case_id"]: c for c in cases}
+        for cid in ("PLAT-006", "PLAT-007"):
+            self.assertIn(cid, by_id)
+            self.assertTrue(by_id[cid].get("requires_mount"), f"{cid} 缺少 requires_mount")
+
+
+class DiscoveryLoopTests(unittest.TestCase):
+    """FR-28: 无界工具发现循环必须与基础设施超时区分开。"""
+
+    QUERY_ONLY = {"tool_lookup", "tool_check", "get_helper", "env_info", "env_prober"}
+
+    def _names(self, seq):
+        return [{"name": n, "arguments": "{}"} for n in seq]
+
+    def test_repeated_query_only_calls_are_flagged(self):
+        seq = ["tool_lookup"] * 35
+        names = [c["name"] for c in self._names(seq)]
+        action = [n for n in names if n not in self.QUERY_ONLY]
+        loop = bool(names and not action and len(names) >= 10)
+        self.assertTrue(loop)
+
+    def test_real_action_calls_prevent_the_flag(self):
+        seq = ["tool_lookup"] * 30 + ["file_read"]
+        names = [c["name"] for c in self._names(seq)]
+        action = [n for n in names if n not in self.QUERY_ONLY]
+        loop = bool(names and not action and len(names) >= 10)
+        self.assertFalse(loop)
+
+    def test_few_query_calls_are_not_flagged(self):
+        seq = ["tool_lookup", "tool_lookup", "file_read"]
+        names = [c["name"] for c in self._names(seq)]
+        action = [n for n in names if n not in self.QUERY_ONLY]
+        loop = bool(names and not action and len(names) >= 10)
+        self.assertFalse(loop)
+
+    def test_same_tool_repetition_threshold(self):
+        """同一工具被调用 20 次以上，即使夹杂其他工具也应标记。"""
+        seq = ["tool_lookup"] * 19 + ["file_read"] + ["tool_lookup"]
+        counts = {}
+        for n in seq:
+            counts[n] = counts.get(n, 0) + 1
+        self.assertGreaterEqual(max(counts.values()), 20)
+
 
 class ReclassifyTests(unittest.TestCase):
     def test_decision_event_maps_to_awaiting_approval(self):

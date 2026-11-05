@@ -48,6 +48,7 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -144,6 +145,7 @@ def read_mount_contract(base: str, token: str, insecure: bool, timeout: float = 
         "ok": status.get("ok"),
         "mount_count": len(mounts),
         "policy": policy.get("policy") or {},
+        "mounted_conversation_ids": [m.get("conv_id") for m in mounts if m.get("conv_id")],
     }
     if mounts:
         m = mounts[0]
@@ -163,6 +165,19 @@ def read_mount_contract(base: str, token: str, insecure: bool, timeout: float = 
             "mount_id": m.get("mount_id"),
         })
     return contract
+
+
+def resolve_mount_conversation(base: str, token: str, insecure: bool) -> Optional[str]:
+    """Return the conversation the browser mount is currently attached to.
+
+    A mount is bound to ONE conversation (the one open in the UI). Agent runs
+    that start a NEW conversation therefore observe mount=offline, and every
+    mount-scoped file tool becomes unavailable. Harness must target the mounted
+    conversation explicitly when it wants to exercise mount tools.
+    """
+    contract = read_mount_contract(base, token, insecure)
+    ids = contract.get("mounted_conversation_ids") or []
+    return ids[0] if ids else None
 
 
 def post_decision(base: str, token: str, conv_id: str, choice: str, insecure: bool, timeout: float = 20.0) -> Dict[str, Any]:
@@ -308,6 +323,25 @@ def run_chat(
             tool_calls.append({"name": str(ev.get("tool_name") or ""), "arguments": args_text[:300]})
     tool_names = [c["name"] for c in tool_calls]
 
+    # --- unbounded tool-discovery detection (FR-28) -------------------------
+    # A run that keeps querying the catalogue but never takes a real action is
+    # a behaviour-level infinite loop, not an infrastructure timeout.
+    QUERY_ONLY_TOOLS = {"tool_lookup", "tool_check", "get_helper", "env_info", "env_prober"}
+    query_counts = Counter(n for n in tool_names if n in QUERY_ONLY_TOOLS)
+    action_calls = [n for n in tool_names if n not in QUERY_ONLY_TOOLS]
+    max_same_tool = max(Counter(tool_names).values()) if tool_names else 0
+    discovery_loop = bool(
+        tool_names
+        and not action_calls
+        and sum(query_counts.values()) >= 10
+    ) or max_same_tool >= 20
+    discovery_detail = {
+        "query_only_calls": dict(query_counts),
+        "action_calls": action_calls,
+        "max_same_tool_calls": max_same_tool,
+        "tool_call_total": len(tool_names),
+    }
+
     http_status = status if isinstance(status, int) else None
     contract_text = (stop_detail or "") + " " + (api_error or "")
     error_type = None
@@ -323,6 +357,8 @@ def run_chat(
         error_type = "model_contract_error"
     elif api_error and "api_error" in api_error:
         error_type = "infrastructure_error"
+    elif discovery_loop:
+        error_type = "tool_discovery_loop"
     elif timed_out:
         error_type = "timeout"
     elif stop_reason == "error":
@@ -348,6 +384,7 @@ def run_chat(
         "api_error": redact(api_error, token),
         "decisions": decisions,
         "decision_actions": decision_actions,
+        "discovery_detail": discovery_detail,
         "tool_calls": tool_calls,
         "tool_names": tool_names,
         "contract_rejected": contract_rejected,
@@ -394,6 +431,7 @@ def summarize(kind: str, result: Dict[str, Any], extra: Optional[Dict[str, Any]]
         record["api_error"] = result.get("api_error")
         record["decisions"] = result.get("decisions")
         record["decision_actions"] = result.get("decision_actions")
+        record["discovery_detail"] = result.get("discovery_detail")
         record["tool_calls"] = result.get("tool_calls")
         record["tool_names"] = result.get("tool_names")
         record["contract_rejected"] = result.get("contract_rejected")
@@ -509,8 +547,19 @@ def aggregate(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 def run_suite(args, base: str, token: str, insecure: bool) -> int:
     cases = load_cases(Path(args.cases))
     rows: List[Dict[str, Any]] = []
+    mount_conv: Optional[str] = None
+    if args.use_mount:
+        mount_conv = resolve_mount_conversation(base, token, insecure)
+        print(f"[mount] browser mount conversation: {mount_conv or 'NONE (no mount attached)'}")
     for case in cases:
         reps = args.repeat if args.repeat > 0 else int(case.get("repeat", 3))
+        # A case may require the browser mount; then it must run in the mounted
+        # conversation, otherwise every mount-scoped tool is unavailable.
+        needs_mount = bool(case.get("requires_mount"))
+        target_conv = mount_conv if needs_mount else ""
+        if needs_mount and not mount_conv:
+            print(f"[{case['case_id']}] SKIPPED: requires_mount but no mount is attached")
+            continue
         for rep in range(1, reps + 1):
             if case.get("follow_up"):
                 # Session-continuity case: run a first turn, then continue in the
@@ -533,7 +582,7 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
                 result["continued_in_same_conversation"] = bool(conv) and result.get("conv_id") == conv
             else:
                 result = run_chat(
-                    base, token, case["message"], "", 1,
+                    base, token, case["message"], target_conv, 1,
                     args.task_name, args.temperature, args.run_timeout,
                     insecure, args.decision,
                 )
@@ -550,6 +599,10 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
                 "rep": rep,
                 "judgement": judgement,
             })
+            if needs_mount:
+                record["requires_mount"] = True
+                record["mount_conversation_id"] = mount_conv
+                record["ran_in_mounted_conversation"] = result.get("conv_id") == mount_conv
             if case.get("follow_up"):
                 record["first_turn"] = result.get("first_turn")
                 record["continued_in_same_conversation"] = result.get("continued_in_same_conversation")
@@ -593,6 +646,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--after", type=int, default=0, help="cursor for feed")
     parser.add_argument("--decision", choices=["none", "deny", "approve"], default="none",
                         help="auto-answer tool-permission decisions during a run")
+    parser.add_argument("--use-mount", action="store_true",
+                        help="run cases that declare requires_mount in the browser-mounted conversation")
     parser.add_argument("--timeout", type=float, default=30.0)
     parser.add_argument("--run-timeout", type=float, default=180.0)
     parser.add_argument("--retries", type=int, default=3)

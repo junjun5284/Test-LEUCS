@@ -54,10 +54,15 @@ python harness_srs\real_harness.py harness_srs\cases_real\sample_publish_real.js
 python harness_srs\platform_harness.py health
 python harness_srs\platform_harness.py run --text "请只回复两个字：ok"
 python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases --run-timeout 150
+python harness_srs\platform_harness.py suite --cases harness_srs\platform_cases --use-mount
 ```
 
 审批决策：遇到 `decision` 事件时，默认 `--decision none`（只记录为 `awaiting_approval`）；
 `--decision deny` 会自动调用 `POST /api/leucs/decision` 拒绝，`--decision approve` 则批准（仅在明确需要时使用）。
+
+**挂载感知**：浏览器挂载与**单个会话**强绑定，因此挂载类用例必须声明
+`requires_mount: true`，并用 `--use-mount` 让 Harness 自动在挂载所在会话中执行；
+无挂载时这类用例会被**跳过**而非误判为失败。
 
 平台运行证据写入 `evidence/platform_runs.jsonl`，完整 SSE 事件写入 `evidence/platform_events/`。
 
@@ -75,7 +80,7 @@ python harness_srs\platform_harness.py mount
 ## 平台健康探针（需要平台令牌）
 
 ```powershell
-python harness_srs\platform_probe.py                      # 8 个只读端点
+python harness_srs\platform_probe.py                      # 9 个只读端点
 python harness_srs\platform_probe.py --save-baseline      # 保存基线
 python harness_srs\platform_probe.py --compare-baseline   # 与基线比对，输出漂移项
 ```
@@ -106,7 +111,6 @@ python harness_srs\run_all.py --model-only
 
 串联健康探针 → 平台层套件 → 模型层，产出 `evidence/regression_report.md` 与
 `evidence/regression_report.json`。
-
 ## Harness 自测与变异测试（离线，无凭据）
 
 ```powershell
@@ -125,6 +129,7 @@ python harness_srs\mutants\run_harness_mutants.py
 - `awaiting_approval`：工具审批挂起，SSE 未给最终答案（`--decision` 可自动应答）
 - `classification_rejected`：分类契约被拒
 - `model_contract_error`：模型响应契约异常（如 `THINK_EMPTY`）
+- `tool_discovery_loop`：工具发现阶段无界循环（同一工具反复调用且无实质动作）
 - `incomplete_stream` / `timeout`：流中断或超时
 - `infrastructure_error`：上游 5xx、连接失败、401 等，不计入 Agent 行为失败率
 - `agent_failure`：平台正常返回但行为失败
@@ -135,13 +140,13 @@ python harness_srs\mutants\run_harness_mutants.py
 - 提交目录不含任何令牌；如曾泄露，请在服务端轮换
 - 平台地址与测试账号信息按课程要求脱敏使用
 
-## 当前状态（2026-11-04）
+## 当前状态（2026-11-05）
 
-- Harness 自测 23 项全部通过；变异测试 14/14 全部被识别
+- Harness 自测 28 项全部通过；变异测试 14/14 全部被识别
 - 平台层用例 7 个（PLAT-001~007），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊、挂载读写、挂载执行拒绝
-- 平台健康探针 8/8 通过，已保存基线
-- 已定位 ISSUE-025 根因：平台分类阶段输出预算固定 412 tokens，约 50%–75% 请求耗尽预算于 reasoning
-- 已确认 ISSUE-026：浏览器挂载工具清单（14 项）全部为文件/Git 操作，不含代码执行能力
-- 已记录问题 27 条，详见 `02_current_issue_list_and_prompt_methods.md`
-- 已知平台侧阻断：ISSUE-025 使分类阶段在多数请求上失败，
-  需平台提高分类阶段输出预算（或对 `retryable` 错误重试）后才能完成审批、续聊与挂载用例的端到端验证
+- 平台健康探针 9/9 通过，已保存基线
+- **ISSUE-025 已闭环**：平台把分类阶段输出预算从 412 提到 1024 后症状消失，根因结论得到验证
+- 已确认 ISSUE-026（挂载无执行能力）、ISSUE-029（挂载与会话强绑定）
+- 已定位 ISSUE-028（工具发现无界循环）、ISSUE-030（因果修复门禁自指死锁）
+- 已记录问题 30 条，详见 `02_current_issue_list_and_prompt_methods.md`
+- 当前主要阻断：ISSUE-030 使挂载类用例在**挂载会话内**仍无法完成首次写入
