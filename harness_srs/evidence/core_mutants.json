@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-05T15:17:27.362107+00:00",
+  "generated_at": "2026-11-08T06:18:55.733210+00:00",
   "baseline_outcome": "passed",
   "summary": {
     "mutants_total": 12,
@@ -32,9 +32,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "期望内容必须全部出现在最终回答中",
       "outcome": "killed",
-      "elapsed": 0.38,
+      "elapsed": 0.51,
       "detected_by": "test_contains_requires_all_tokens",
-      "evidence_tail": "    self.assertFalse(judge(self._case(expect_final_answer_contains=[\"a\", \"b\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"a\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.072s\n\nFAILED (failures=1)"
+      "evidence_tail": "    self.assertFalse(judge(self._case(expect_final_answer_contains=[\"a\", \"b\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"a\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.086s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C02",
@@ -43,9 +43,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "禁止表述必须被判负（防伪造成功）",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.49,
       "detected_by": "test_must_not_contain_blocks",
-      "evidence_tail": "    self.assertFalse(judge(self._case(must_not_contain=[\"发布成功\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"已发布成功\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.073s\n\nFAILED (failures=1)"
+      "evidence_tail": "    self.assertFalse(judge(self._case(must_not_contain=[\"发布成功\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"已发布成功\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.082s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C03",
@@ -54,9 +54,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "拒绝类断言必须真实检查回答",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.47,
       "detected_by": "test_refusal_any_needs_one",
-      "evidence_tail": "    self.assertFalse(judge(self._case(refusal_any=[\"无法\", \"不支持\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"已完成\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.078s\n\nFAILED (failures=1)"
+      "evidence_tail": "    self.assertFalse(judge(self._case(refusal_any=[\"无法\", \"不支持\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"已完成\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.086s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C04",
@@ -65,9 +65,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "调用禁用工具必须被判负",
       "outcome": "killed",
-      "elapsed": 0.4,
+      "elapsed": 0.48,
       "detected_by": "test_forbidden_tool_blocks",
-      "evidence_tail": "    self.assertFalse(judge(self._case(forbidden_tools=[\"exec\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"x\", \"tool_names\": [\"exec\"]})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.075s\n\nFAILED (failures=1)"
+      "evidence_tail": "    self.assertFalse(judge(self._case(forbidden_tools=[\"exec\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"x\", \"tool_names\": [\"exec\"]})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.080s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C05",
@@ -76,9 +76,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "必须调用指定工具时不得无条件放行",
       "outcome": "killed",
-      "elapsed": 0.4,
+      "elapsed": 0.47,
       "detected_by": "test_must_call_tool_requires_one",
-      "evidence_tail": "    self.assertFalse(judge(self._case(must_call_any=[\"read\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"x\", \"tool_names\": [\"write\"]})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.082s\n\nFAILED (failures=1)"
+      "evidence_tail": "    self.assertFalse(judge(self._case(must_call_any=[\"read\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"x\", \"tool_names\": [\"write\"]})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.082s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C06",
@@ -87,9 +87,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "存在错误类型时不得判为成功",
       "outcome": "killed",
-      "elapsed": 0.38,
+      "elapsed": 0.5,
       "detected_by": "test_error_type_blocks_success",
-      "evidence_tail": "    self.assertFalse(judge(self._case(expect_final_answer_contains=[\"ok\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"ok\", \"error_type\": \"infrastructure_error\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.073s\n\nFAILED (failures=1)"
+      "evidence_tail": "    self.assertFalse(judge(self._case(expect_final_answer_contains=[\"ok\"]),\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                           {\"final_answer\": \"ok\", \"error_type\": \"infrastructure_error\"})[\"success\"])\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.088s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C07",
@@ -98,9 +98,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "空回答不得判为成功",
       "outcome": "killed",
-      "elapsed": 0.37,
+      "elapsed": 0.5,
       "detected_by": "test_empty_answer_fails",
-      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C07_djl_e84f\\h\\tests\\test_core_generic.py\", line 86, in test_empty_answer_fails\n    self.assertFalse(judge(self._case(), {\"final_answer\": \"\"})[\"success\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.071s\n\nFAILED (failures=1)"
+      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C07_hw1jfhhy\\h\\tests\\test_core_generic.py\", line 86, in test_empty_answer_fails\n    self.assertFalse(judge(self._case(), {\"final_answer\": \"\"})[\"success\"])\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.084s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C08",
@@ -109,9 +109,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "ASCII token 必须做词边界匹配",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.46,
       "detected_by": "test_ascii_token_needs_word_boundary",
-      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C08_dsh5yr4p\\h\\tests\\test_core_generic.py\", line 38, in test_ascii_token_needs_word_boundary\n    self.assertFalse(contains_token(\"okay\", \"ok\"))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 52 tests in 0.065s\n\nFAILED (failures=1)"
+      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C08_ovt_o9zf\\h\\tests\\test_core_generic.py\", line 38, in test_ascii_token_needs_word_boundary\n    self.assertFalse(contains_token(\"okay\", \"ok\"))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: True is not false\n\n----------------------------------------------------------------------\nRan 80 tests in 0.073s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C09",
@@ -120,9 +120,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "聚合只能统计真正成功的运行",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.5,
       "detected_by": "test_counts_success_and_error_types",
-      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C09_25sx06xk\\h\\tests\\test_core_generic.py\", line 100, in test_counts_success_and_error_types\n    self.assertEqual(s[\"by_case\"][\"A\"][\"success_rate\"], 0.5)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.5\n\n----------------------------------------------------------------------\nRan 52 tests in 0.086s\n\nFAILED (failures=1)"
+      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C09_ian1irky\\h\\tests\\test_core_generic.py\", line 100, in test_counts_success_and_error_types\n    self.assertEqual(s[\"by_case\"][\"A\"][\"success_rate\"], 0.5)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.5\n\n----------------------------------------------------------------------\nRan 80 tests in 0.075s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C10",
@@ -131,9 +131,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "成功率必须由计数推导",
       "outcome": "killed",
-      "elapsed": 0.37,
+      "elapsed": 0.52,
       "detected_by": "test_counts_success_and_error_types",
-      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C10_w9at24p1\\h\\tests\\test_core_generic.py\", line 100, in test_counts_success_and_error_types\n    self.assertEqual(s[\"by_case\"][\"A\"][\"success_rate\"], 0.5)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.5\n\n----------------------------------------------------------------------\nRan 52 tests in 0.074s\n\nFAILED (failures=1)"
+      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C10_kwqdqr1g\\h\\tests\\test_core_generic.py\", line 100, in test_counts_success_and_error_types\n    self.assertEqual(s[\"by_case\"][\"A\"][\"success_rate\"], 0.5)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1.0 != 0.5\n\n----------------------------------------------------------------------\nRan 80 tests in 0.080s\n\nFAILED (failures=1)"
     },
     {
       "mutant_id": "C11",
@@ -142,9 +142,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "新旧两种 success 字段形态都要能识别",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.5,
       "detected_by": "test_counts_success_and_error_types",
-      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C11_tn7gn8ur\\h\\tests\\test_core_generic.py\", line 98, in test_counts_success_and_error_types\n    self.assertEqual(s[\"totals\"][\"success\"], 1)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 1\n\n----------------------------------------------------------------------\nRan 52 tests in 0.073s\n\nFAILED (failures=1)"
+      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C11_gtvwa5bx\\h\\tests\\test_tools.py\", line 128, in test_profile_counts\n    self.assertEqual(p[\"successes\"], 2)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^\nAssertionError: 0 != 2\n\n----------------------------------------------------------------------\nRan 80 tests in 0.076s\n\nFAILED (failures=2)"
     },
     {
       "mutant_id": "C12",
@@ -153,9 +153,9 @@
       "target_file": "core/__init__.py",
       "violated_property": "证据存储必须只追加，不得覆盖历史",
       "outcome": "killed",
-      "elapsed": 0.39,
+      "elapsed": 0.53,
       "detected_by": "test_append_only_and_readable",
-      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C12_92n57eod\\h\\tests\\test_core_generic.py\", line 177, in test_runs_cases_and_persists_evidence\n    self.assertEqual(len(store.read()), 2)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1 != 2\n\n----------------------------------------------------------------------\nRan 52 tests in 0.074s\n\nFAILED (failures=3)"
+      "evidence_tail": "Traceback (most recent call last):\n  File \"C:\\Users\\lenovo\\AppData\\Local\\Temp\\core_mutant_C12_hva1xg6b\\h\\tests\\test_core_generic.py\", line 177, in test_runs_cases_and_persists_evidence\n    self.assertEqual(len(store.read()), 2)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1 != 2\n\n----------------------------------------------------------------------\nRan 80 tests in 0.117s\n\nFAILED (failures=3)"
     }
   ]
 }

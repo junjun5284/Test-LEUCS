@@ -245,7 +245,20 @@ class LeucsAdapter:
                 "has_execution_tool": any(t in tools for t in EXECUTION_TOOLS),
                 "conv_id": m.get("conv_id"),
             })
+        self._save_contract(contract)
         return contract
+
+    def _save_contract(self, contract: Dict[str, Any]) -> None:
+        """Persist the mount contract so tool-name checks can use it later."""
+        try:
+            path = self.evidence_dir / "platform_mount_contract.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({
+                "captured_at": datetime.now(timezone.utc).isoformat(),
+                "contract": contract,
+            }, ensure_ascii=False, indent=2), encoding="utf-8")
+        except OSError:
+            pass
 
     def _post_decision(self, conv_id: str, choice: str) -> Dict[str, Any]:
         res = self._request("/api/leucs/decision", "POST",

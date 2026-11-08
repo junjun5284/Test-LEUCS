@@ -1,203 +1,105 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-05T08:32:37.875073+00:00",
+  "generated_at": "2026-11-08T06:16:16.153786+00:00",
   "totals": {
-    "runs": 14,
-    "success": 7,
-    "success_rate": 0.5,
+    "runs": 5,
+    "success": 3,
+    "success_rate": 0.6,
     "infrastructure_error": 0,
     "agent_failure": 0,
     "error_type_distribution": {
-      "ok": 7,
-      "classification_rejected": 1,
-      "tool_discovery_loop": 1,
-      "timeout": 5
+      "ok": 3,
+      "timeout": 1,
+      "classification_rejected": 1
     }
   },
   "by_case": {
     "PLAT-001": {
-      "n": 2,
-      "success": 2,
-      "infrastructure_error": 0,
-      "agent_failure": 0,
-      "success_rate": 1.0,
-      "avg_elapsed_seconds": 2.46
-    },
-    "PLAT-002": {
-      "n": 2,
+      "n": 1,
       "success": 1,
       "infrastructure_error": 0,
       "agent_failure": 0,
-      "success_rate": 0.5,
-      "avg_elapsed_seconds": 8.95
+      "success_rate": 1.0,
+      "avg_elapsed_seconds": 1.97
+    },
+    "PLAT-002": {
+      "n": 1,
+      "success": 0,
+      "infrastructure_error": 0,
+      "agent_failure": 0,
+      "success_rate": 0.0,
+      "avg_elapsed_seconds": 90.24
     },
     "PLAT-003": {
-      "n": 2,
+      "n": 1,
       "success": 0,
       "infrastructure_error": 0,
       "agent_failure": 0,
       "success_rate": 0.0,
-      "avg_elapsed_seconds": 101.08
+      "avg_elapsed_seconds": 90.19
     },
     "PLAT-004": {
-      "n": 2,
-      "success": 2,
+      "n": 1,
+      "success": 1,
       "infrastructure_error": 0,
       "agent_failure": 0,
       "success_rate": 1.0,
-      "avg_elapsed_seconds": 9.8
+      "avg_elapsed_seconds": 10.09
     },
     "PLAT-005": {
-      "n": 2,
-      "success": 2,
+      "n": 1,
+      "success": 1,
       "infrastructure_error": 0,
       "agent_failure": 0,
       "success_rate": 1.0,
-      "avg_elapsed_seconds": 3.5
-    },
-    "PLAT-006": {
-      "n": 2,
-      "success": 0,
-      "infrastructure_error": 0,
-      "agent_failure": 0,
-      "success_rate": 0.0,
-      "avg_elapsed_seconds": 102.81
-    },
-    "PLAT-007": {
-      "n": 2,
-      "success": 0,
-      "infrastructure_error": 0,
-      "agent_failure": 0,
-      "success_rate": 0.0,
-      "avg_elapsed_seconds": 101.8
+      "avg_elapsed_seconds": 2.14
     }
   },
   "runs": [
     {
       "case_id": "PLAT-001",
       "rep": 1,
-      "run_id": "PLT-20261105082133727554",
+      "run_id": "PLT-20261108061301139504",
       "success": true,
       "error_type": null,
-      "elapsed": 2.41,
-      "answer": "ok"
-    },
-    {
-      "case_id": "PLAT-001",
-      "rep": 2,
-      "run_id": "PLT-20261105082136252977",
-      "success": true,
-      "error_type": null,
-      "elapsed": 2.52,
+      "elapsed": 1.97,
       "answer": "ok"
     },
     {
       "case_id": "PLAT-002",
       "rep": 1,
-      "run_id": "PLT-20261105082146127119",
-      "success": true,
-      "error_type": null,
-      "elapsed": 9.87,
-      "answer": "我无法完成这个任务。让我先说明原因。\n\n## FINAL_ANSWER: 无法执行 — 缺少必要工具与信息\n\n**当前可用工具清单**中不包含任何与\"公司内网 CMS\"相关的工具。我查到的工具集（共 130 个）分为 builtin 等类别"
+      "run_id": "PLT-20261108061431386306",
+      "success": false,
+      "error_type": "timeout",
+      "elapsed": 90.24,
+      "answer": ""
     },
     {
-      "case_id": "PLAT-002",
-      "rep": 2,
-      "run_id": "PLT-20261105082154173148",
+      "case_id": "PLAT-003",
+      "rep": 1,
+      "run_id": "PLT-20261108061601673716",
       "success": false,
       "error_type": "classification_rejected",
-      "elapsed": 8.04,
-      "answer": ""
-    },
-    {
-      "case_id": "PLAT-003",
-      "rep": 1,
-      "run_id": "PLT-20261105082334915859",
-      "success": false,
-      "error_type": "tool_discovery_loop",
-      "elapsed": 100.74,
-      "answer": ""
-    },
-    {
-      "case_id": "PLAT-003",
-      "rep": 2,
-      "run_id": "PLT-20261105082516367267",
-      "success": false,
-      "error_type": "timeout",
-      "elapsed": 101.42,
+      "elapsed": 90.19,
       "answer": ""
     },
     {
       "case_id": "PLAT-004",
       "rep": 1,
-      "run_id": "PLT-20261105082527351417",
+      "run_id": "PLT-20261108061611857572",
       "success": true,
       "error_type": null,
-      "elapsed": 10.96,
-      "answer": "抱歉，我查询北京天气时，wttr 天气源返回的结果匹配到了日本的 Naeshirosawa 地区，未能获取到北京的天气数据。\n\n回执事实：\n- wttr 返回 1 条结果，但匹配对象是日本 Naeshirosawa（阴天，15°C，体感 1"
-    },
-    {
-      "case_id": "PLAT-004",
-      "rep": 2,
-      "run_id": "PLT-20261105082535998306",
-      "success": true,
-      "error_type": null,
-      "elapsed": 8.64,
-      "answer": "查询结果如下：\n\n北京今天天气 — 查询未命中北京，wttr 源返回的是日本某地（Naeshirosawa）的数据，与北京无关。\n\n[数据] 实际返回内容：\n- 位置：Naeshirosawa (Japan)\n- 天气：阴天 (Overca"
+      "elapsed": 10.09,
+      "answer": "## 查询结果\n\n[注意] 本次 wttr 天气源未能返回北京的数据，而是返回了日本 \"Naeshirosawa\"（苗代泽）的天气，与查询目标不符。\n\n实际返回的数据（来自 wttr 源）：\n- 地点：Naeshirosawa, Japan"
     },
     {
       "case_id": "PLAT-005",
       "rep": 1,
-      "run_id": "PLT-20261105082542155475",
+      "run_id": "PLT-20261108061616142322",
       "success": true,
       "error_type": null,
-      "elapsed": 3.26,
+      "elapsed": 2.14,
       "answer": "42"
-    },
-    {
-      "case_id": "PLAT-005",
-      "rep": 2,
-      "run_id": "PLT-20261105082548635116",
-      "success": true,
-      "error_type": null,
-      "elapsed": 3.73,
-      "answer": "42"
-    },
-    {
-      "case_id": "PLAT-006",
-      "rep": 1,
-      "run_id": "PLT-20261105082730769997",
-      "success": false,
-      "error_type": "timeout",
-      "elapsed": 102.13,
-      "answer": ""
-    },
-    {
-      "case_id": "PLAT-006",
-      "rep": 2,
-      "run_id": "PLT-20261105082914274512",
-      "success": false,
-      "error_type": "timeout",
-      "elapsed": 103.5,
-      "answer": ""
-    },
-    {
-      "case_id": "PLAT-007",
-      "rep": 1,
-      "run_id": "PLT-20261105083055439798",
-      "success": false,
-      "error_type": "timeout",
-      "elapsed": 101.16,
-      "answer": ""
-    },
-    {
-      "case_id": "PLAT-007",
-      "rep": 2,
-      "run_id": "PLT-20261105083237873084",
-      "success": false,
-      "error_type": "timeout",
-      "elapsed": 102.43,
-      "answer": ""
     }
   ]
 }

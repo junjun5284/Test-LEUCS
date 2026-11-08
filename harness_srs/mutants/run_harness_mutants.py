@@ -49,6 +49,10 @@ def copy_harness(dest: Path) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     for name in HARNESS_FILES:
         shutil.copy2(SUBMISSION / name, dest / name)
+    for name in ("lint_cases.py", "baseline.py", "platform_metadata.py"):
+        src = SUBMISSION / name
+        if src.is_file():
+            shutil.copy2(src, dest / name)
     for package in ("core", "adapters"):
         source = SUBMISSION / package
         if source.is_dir():

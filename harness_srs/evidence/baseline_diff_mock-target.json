@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "compared_at": "2026-11-08T06:09:26.637053+00:00",
+  "baseline_label": "2026-11-08",
+  "baseline_captured_at": "2026-11-08T06:09:15.167791+00:00",
+  "current_captured_at": "2026-11-08T06:09:26.635147+00:00",
+  "cases_compared": 4,
+  "cases_only_in_baseline": [],
+  "cases_only_in_current": [],
+  "verdict_counts": {
+    "unchanged": 4
+  },
+  "regressed": [],
+  "improved": [],
+  "flaky": [],
+  "changes": [],
+  "totals_before": {
+    "cases": 4,
+    "runs": 8,
+    "successes": 4,
+    "success_rate": 0.5,
+    "infrastructure_error": 0
+  },
+  "totals_after": {
+    "cases": 4,
+    "runs": 8,
+    "successes": 4,
+    "success_rate": 0.5,
+    "infrastructure_error": 0
+  },
+  "overall_verdict": "unchanged"
+}

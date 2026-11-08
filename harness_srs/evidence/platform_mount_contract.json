@@ -1,0 +1,31 @@
+{
+  "captured_at": "2026-11-05T00:00:00+00:00",
+  "note": "reconstructed from the mount contract observed on 2026-11-05 (mount offline since)",
+  "contract": {
+    "online": false,
+    "ok": true,
+    "mount_count": 0,
+    "device_class": "pc",
+    "executor_kind": "browser",
+    "worker": true,
+    "fs_access": true,
+    "tools": [
+      "read_file",
+      "write_file",
+      "list_dir",
+      "mkdir",
+      "delete",
+      "grep",
+      "glob",
+      "file_scan",
+      "git_status",
+      "git_log",
+      "git_diff",
+      "git_init",
+      "git_add",
+      "git_commit"
+    ],
+    "tool_count": 14,
+    "has_execution_tool": false
+  }
+}

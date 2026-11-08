@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "label": "2026-11-08",
+  "adapter": "mock-target",
+  "captured_at": "2026-11-08T06:09:15.167791+00:00",
+  "totals": {
+    "cases": 4,
+    "runs": 8,
+    "successes": 4,
+    "success_rate": 0.5,
+    "infrastructure_error": 0
+  },
+  "cases": {
+    "MOCK-001": {
+      "n": 2,
+      "successes": 2,
+      "success_rate": 1.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "ok": 2
+      },
+      "avg_elapsed": 0.0
+    },
+    "MOCK-002": {
+      "n": 2,
+      "successes": 2,
+      "success_rate": 1.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "ok": 2
+      },
+      "avg_elapsed": 0.0
+    },
+    "MOCK-003": {
+      "n": 2,
+      "successes": 0,
+      "success_rate": 0.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "ok": 2
+      },
+      "avg_elapsed": 0.0
+    },
+    "MOCK-004": {
+      "n": 2,
+      "successes": 0,
+      "success_rate": 0.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "agent_failure": 2
+      },
+      "avg_elapsed": 0.0
+    }
+  }
+}

@@ -180,6 +180,44 @@ def resolve_mount_conversation(base: str, token: str, insecure: bool) -> Optiona
     return ids[0] if ids else None
 
 
+def read_runtime_config(base: str, token: str, insecure: bool, timeout: float = 20.0) -> Dict[str, Any]:
+    """Read the runtime configuration that decides how the platform behaves.
+
+    Approval level, output budget, temperature, retry count and the bound
+    model all change what "the same case" means, so they belong in evidence.
+    """
+    def get(path: str) -> Dict[str, Any]:
+        res = request(base, path, token, timeout=timeout, insecure=insecure)
+        try:
+            return json.loads(res.get("text") or "{}")
+        except json.JSONDecodeError:
+            return {}
+
+    approval = get("/api/leucs/config/approval-level")
+    context = get("/api/leucs/context-status")
+    llm_list = get("/api/llm/list")
+    runtime_name = llm_list.get("current_runtime")
+    runtime = (llm_list.get(runtime_name) or {}) if runtime_name else {}
+
+    return {
+        "approval_level": approval.get("level"),
+        "approval_levels_available": sorted((approval.get("levels") or {}).keys()),
+        "runtime_api": runtime_name,
+        "model": runtime.get("model"),
+        "base_url": runtime.get("base_url"),
+        "think_enabled": runtime.get("think_enabled"),
+        "max_output": runtime.get("max_output"),
+        "max_thinking_tokens": runtime.get("max_thinking_tokens"),
+        "supports_thinking": runtime.get("supports_thinking"),
+        "tool_exec_mode": runtime.get("tool_exec_mode"),
+        "context_temperature": context.get("temperature"),
+        "context_timeout": context.get("timeout"),
+        "context_retry_count": context.get("retry_count"),
+        "compact_trigger": context.get("compact_trigger"),
+        "system_prompt_tokens": context.get("system_prompt_tokens"),
+    }
+
+
 def post_decision(base: str, token: str, conv_id: str, choice: str, insecure: bool, timeout: float = 20.0) -> Dict[str, Any]:
     """POST /api/leucs/decision — answer a pending tool-permission card."""
     body = {"choice": choice, "conversation_id": conv_id}
@@ -634,7 +672,7 @@ def run_suite(args, base: str, token: str, insecure: bool) -> int:
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="LEUCS platform-level harness")
-    parser.add_argument("action", choices=["health", "list", "conversation", "events", "feed", "run", "suite", "mount"])
+    parser.add_argument("action", choices=["health", "list", "conversation", "events", "feed", "run", "suite", "mount", "config"])
     parser.add_argument("conv_id", nargs="?", help="conversation id (conversation/events)")
     parser.add_argument("--cases", default="", help="path to a case JSON or a directory (suite)")
     parser.add_argument("--repeat", type=int, default=0, help="override per-case repeat count (suite)")
@@ -681,6 +719,18 @@ def main(argv: list[str]) -> int:
             "status": 200 if contract.get("ok") else None,
             "error": None if contract.get("ok") else "mount status unavailable",
             "contract": contract,
+        }
+    elif args.action == "config":
+        config = read_runtime_config(base, token, insecure, args.timeout)
+        record = {
+            "run_id": f"PLT-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
+            "kind": "config",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "path": "/api/leucs/config + /api/leucs/context-status + /api/llm/list",
+            "method": "GET",
+            "status": 200,
+            "error": None,
+            "config": config,
         }
     elif args.action == "list":
         result = retry(request, base, "/api/leucs/conversations", token, timeout=args.timeout, insecure=insecure, retries=args.retries)

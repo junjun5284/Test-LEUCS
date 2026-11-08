@@ -200,6 +200,55 @@ python harness_srs\mutants\run_harness_mutants.py   # 平台层判定 14 个变�
 存活变异体即自测缺口。结果写入 `evidence/core_mutants.json` 与
 `evidence/harness_mutants.json`。
 
+## 回归判定与配置可归因性
+
+### 保存基线 / 对比回归
+
+```powershell
+# 保存当前运行为基线
+python harness_srs\baseline.py --adapter leucs save --label 2026-11-08
+
+# 之后与基线比较
+python harness_srs\baseline.py --adapter leucs compare --baseline leucs-2026-11-08.json
+
+# 统一 CLI
+python harness_srs\harness_cli.py --adapter leucs baseline save --label xxx
+python harness_srs\harness_cli.py --adapter leucs baseline compare --baseline xxx.json
+```
+
+比较结果区分四种情况：
+
+| 判定 | 含义 |
+|---|---|
+| `improved` / `regressed` | 行为确实变好 / 变差 |
+| `unchanged` | 无变化 |
+| `flaky` | 判定在重复之间摇摆，**不能支持任何方向的结论** |
+| `inconclusive` | 基础设施错误增多，不能归因为行为变化 |
+
+### 运行配置快照（只读）
+
+```powershell
+python harness_srs\platform_metadata.py
+python harness_srs\platform_metadata.py --compare evidence/platform_metadata.json
+```
+
+抓取并指纹化影响行为的配置：构建版本、绑定模型、思考开关、输出上限、
+温度、超时、重试次数、审批级别、挂载状态、工具货架规模等。
+**先排除配置变化，再谈行为回归。**
+
+### 用例静态检查
+
+```powershell
+python harness_srs\lint_cases.py
+python harness_srs\harness_cli.py lint --cases harness_srs\platform_cases
+```
+
+在消耗真实调用之前拦截有问题的用例：缺字段、空 oracle、
+期望与禁止集合相交、`repeat<2`、`case_id` 重复、工具名拼写错误。
+
+> 这个检查当场抓到了我们自己的错误：PLAT-006 里把平台工具写成了
+> `file_write` / `file_list`，而挂载契约里实际是 `write_file` / `list_dir`。
+
 ## 判定与失败分层
 
 - `ok`：正常完成
@@ -210,6 +259,7 @@ python harness_srs\mutants\run_harness_mutants.py   # 平台层判定 14 个变�
 - `incomplete_stream` / `timeout`：流中断或超时
 - `infrastructure_error`：上游 5xx、连接失败、401 等，不计入 Agent 行为失败率
 - `agent_failure`：平台正常返回但行为失败
+- `skipped`：前置条件缺失，未执行（不计为失败）
 
 ## 安全
 
@@ -217,12 +267,16 @@ python harness_srs\mutants\run_harness_mutants.py   # 平台层判定 14 个变�
 - 提交目录不含任何令牌；如曾泄露，请在服务端轮换
 - 平台地址与测试账号信息按课程要求脱敏使用
 
-## 当前状态（2026-11-05）
+## 当前状态（2026-11-08）
 
-- 自测 52 项全部通过；变异测试：通用核心 12/12、平台层判定 14/14 全部被识别
+- 自测 **80 项**全部通过；变异测试：通用核心 12/12、平台层判定 14/14 全部被识别
 - **通用性已验证**：内置 `mock-target` 适配器（离线、无凭据）可完整跑通套件+判定+控制台
 - 平台层用例 7 个（PLAT-001~007），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊、挂载读写、挂载执行拒绝
 - 平台健康探针 9/9 通过，已保存基线
+- **回归判定**：基线保存 / 对比，支持 improved / regressed / unchanged / **flaky** / inconclusive
+- **配置可归因性**：运行配置快照 + 指纹 + 差异对比（先排除配置变化再谈行为回归）
+- **用例静态检查**：拦截缺字段、空 oracle、集合相交、工具名拼写错误（已抓到 PLAT-006 的工具名笔误）
+- **不稳定用例显式标注**：汇总时单独列出判定摇摆的用例，不进入成功率乐观解释
 - Web 控制台可用：总览 / 运行列表 / 详情 / 事件轨迹 / SSE 实时流 / 界面触发运行
 - 核心层与平台层已分离，适配器契约见 `docs/ADAPTER_GUIDE.md`
 - **ISSUE-025 已闭环**：平台把分类阶段输出预算从 412 提到 1024 后症状消失

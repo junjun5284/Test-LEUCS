@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0",
+  "label": "2026-11-08",
+  "adapter": "leucs",
+  "captured_at": "2026-11-08T06:16:24.545708+00:00",
+  "totals": {
+    "cases": 7,
+    "runs": 86,
+    "successes": 24,
+    "success_rate": 0.279,
+    "infrastructure_error": 0
+  },
+  "cases": {
+    "PLAT-001": {
+      "n": 16,
+      "successes": 10,
+      "success_rate": 0.625,
+      "infrastructure_error": 0,
+      "error_types": {
+        "ok": 10,
+        "model_contract_error": 6
+      },
+      "avg_elapsed": 6.79
+    },
+    "PLAT-002": {
+      "n": 16,
+      "successes": 2,
+      "success_rate": 0.125,
+      "infrastructure_error": 0,
+      "error_types": {
+        "ok": 5,
+        "model_contract_error": 7,
+        "classification_rejected": 3,
+        "timeout": 1
+      },
+      "avg_elapsed": 39.96
+    },
+    "PLAT-003": {
+      "n": 16,
+      "successes": 0,
+      "success_rate": 0.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "ok": 3,
+        "model_contract_error": 7,
+        "timeout": 4,
+        "tool_discovery_loop": 1,
+        "classification_rejected": 1
+      },
+      "avg_elapsed": 55.95
+    },
+    "PLAT-004": {
+      "n": 13,
+      "successes": 6,
+      "success_rate": 0.462,
+      "infrastructure_error": 0,
+      "error_types": {
+        "model_contract_error": 7,
+        "ok": 6
+      },
+      "avg_elapsed": 9.51
+    },
+    "PLAT-005": {
+      "n": 12,
+      "successes": 6,
+      "success_rate": 0.5,
+      "infrastructure_error": 0,
+      "error_types": {
+        "model_contract_error": 6,
+        "ok": 6
+      },
+      "avg_elapsed": 5.22
+    },
+    "PLAT-006": {
+      "n": 7,
+      "successes": 0,
+      "success_rate": 0.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "model_contract_error": 1,
+        "ok": 3,
+        "timeout": 3
+      },
+      "avg_elapsed": 64.05
+    },
+    "PLAT-007": {
+      "n": 6,
+      "successes": 0,
+      "success_rate": 0.0,
+      "infrastructure_error": 0,
+      "error_types": {
+        "model_contract_error": 1,
+        "ok": 2,
+        "timeout": 3
+      },
+      "avg_elapsed": 82.84
+    }
+  }
+}

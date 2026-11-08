@@ -34,7 +34,8 @@ def copy_core(dest: Path) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "core").mkdir(parents=True, exist_ok=True)
     shutil.copy2(SUBMISSION / "core" / "__init__.py", dest / "core" / "__init__.py")
-    for name in ("platform_harness.py", "reclassify_platform.py", "report_platform.py"):
+    for name in ("platform_harness.py", "reclassify_platform.py", "report_platform.py",
+                 "lint_cases.py", "baseline.py", "platform_metadata.py"):
         src = SUBMISSION / name
         if src.is_file():
             shutil.copy2(src, dest / name)

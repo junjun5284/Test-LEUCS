@@ -8,6 +8,6 @@
   "oracle": {
     "expect_no_error": true,
     "expect_final_answer_contains": ["mount-write-ok"],
-    "must_call_any": ["file_read", "file_write", "file_list", "list_dir", "glob", "grep", "file_scan"]
+    "must_call_any": ["read_file", "write_file", "list_dir", "glob", "grep", "file_scan"]
   }
 }

@@ -115,6 +115,32 @@ def is_success(record: Dict[str, Any]) -> bool:
     return bool(judgement.get("success"))
 
 
+def detect_flaky(rows: Iterable[Dict[str, Any]], min_runs: int = 3) -> List[Dict[str, Any]]:
+    """Find cases whose verdict flips between repetitions.
+
+    A case that passes sometimes and fails other times cannot support a
+    conclusion in either direction. Reporting it separately keeps it from
+    polluting both the success rate and the failure list.
+    """
+    by_case: Dict[str, List[bool]] = {}
+    for r in rows:
+        by_case.setdefault(str(r.get("case_id") or "?"), []).append(is_success(r))
+    flaky: List[Dict[str, Any]] = []
+    for cid, flags in by_case.items():
+        if len(flags) < min_runs:
+            continue
+        successes = sum(1 for f in flags if f)
+        if 0 < successes < len(flags):
+            flaky.append({
+                "case_id": cid,
+                "runs": len(flags),
+                "successes": successes,
+                "success_rate": round(successes / len(flags), 3),
+                "verdict_sequence": flags,
+            })
+    return sorted(flaky, key=lambda f: f["success_rate"])
+
+
 def aggregate(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     """Roll per-run verdicts up to per-case and total statistics."""
     by_case: Dict[str, Dict[str, Any]] = {}
