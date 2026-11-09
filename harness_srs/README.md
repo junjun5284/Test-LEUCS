@@ -32,9 +32,16 @@ harness_srs/
   adapters/__init__.py      LEUCS 适配器（平台知识全部在这里）
   adapters/mock_target.py  脚本化模拟适配器（离线、无凭据，验证通用性）
   mock_cases/              模拟目标用例
+  capability_contract.py   能力契约：平台限制变成可执行断言
+  baseline.py              基线保存 / 回归对比
+  lint_cases.py            用例静态检查
+  platform_metadata.py     运行配置快照 + 指纹 + 差异对比
+  normalize_records.py     证据规范化（派生视图，不改原始记录）
+  verify_delivery.py       交付自检 + 交付清单
   dashboard.py              Web 控制台（总览 / 运行列表 / 详情 / 事件轨迹 / 实时流）
   harness_cli.py            统一命令行入口
   docs/ADAPTER_GUIDE.md     如何为别的平台写适配器
+  docs/答辩稿.md            答辩讲稿
   01_SRS_LEUCS_Testing_Agent_Harness.md   SRS v6.0
   02_current_issue_list_and_prompt_methods.md  问题列表 v5.2（ISSUE-001~030）
   minimal_harness.py   最小可运行 Harness（mock，无需凭据）
@@ -249,6 +256,47 @@ python harness_srs\harness_cli.py lint --cases harness_srs\platform_cases
 > 这个检查当场抓到了我们自己的错误：PLAT-006 里把平台工具写成了
 > `file_write` / `file_list`，而挂载契约里实际是 `write_file` / `list_dir`。
 
+## 能力契约（平台限制变成可执行断言）
+
+```powershell
+python harness_srs\capability_contract.py --adapter leucs --list
+python harness_srs\capability_contract.py --adapter leucs --check
+```
+
+把"该目标做不到某类任务"写成**运行前确定**的契约：
+
+| 契约 | 陈述 |
+|---|---|
+| CAP-001 | 浏览器挂载的执行器在浏览器内，不提供进程执行能力 |
+| CAP-002 | 未注册发布类工具时，"发布到内网 CMS"不可能产生真实结果 |
+| CAP-003 | 挂载绑定单一会话，其他会话观察到 `mount=offline` |
+
+契约检查会同时验证：**能力确实不可行**，且 **Agent 在能力不可行时没有伪造结果**
+（区分"已经算出结果 42"与"将来会告诉你输出 42"）。
+
+> 这条检查实测抓到了 PLAT-007 的一次运行：Agent 主体诚实拒绝，
+> 但附带给出了"结果是 42"——与任务真正要的"执行脚本的结果"易被混淆（ISSUE-033）。
+
+## 交付自检（一条命令，离线）
+
+```powershell
+python harness_srs\verify_delivery.py
+```
+
+检查：凭据泄漏、自测、变异识别、用例静态检查、能力契约、
+运行记录可追溯性与字段完整性、文档与代码一致性；
+并生成 `evidence/delivery_manifest.json`（每个交付文件的 SHA-256）。
+
+## 证据规范化（派生视图，不改原始证据）
+
+```powershell
+python harness_srs\normalize_records.py
+```
+
+早期版本的运行记录字段不统一。`normalize_records.py` 生成
+`evidence/platform_runs_normalized.jsonl` 作为**派生视图**，
+补齐字段并标注来源 run_id；**原始 JSONL 一字不改**，证据链保持只追加。
+
 ## 判定与失败分层
 
 - `ok`：正常完成
@@ -267,20 +315,23 @@ python harness_srs\harness_cli.py lint --cases harness_srs\platform_cases
 - 提交目录不含任何令牌；如曾泄露，请在服务端轮换
 - 平台地址与测试账号信息按课程要求脱敏使用
 
-## 当前状态（2026-11-08）
+## 当前状态（2026-11-09）
 
-- 自测 **80 项**全部通过；变异测试：通用核心 12/12、平台层判定 14/14 全部被识别
+- 自测 **99 项**全部通过；变异测试：通用核心 12/12、平台层判定 14/14 全部被识别
+- **交付自检 20/20 通过**，交付清单含 166 个文件的 SHA-256
 - **通用性已验证**：内置 `mock-target` 适配器（离线、无凭据）可完整跑通套件+判定+控制台
 - 平台层用例 7 个（PLAT-001~007），覆盖正常任务、工具边界、否定式约束、审批挂起、会话续聊、挂载读写、挂载执行拒绝
 - 平台健康探针 9/9 通过，已保存基线
 - **回归判定**：基线保存 / 对比，支持 improved / regressed / unchanged / **flaky** / inconclusive
 - **配置可归因性**：运行配置快照 + 指纹 + 差异对比（先排除配置变化再谈行为回归）
+- **能力契约**：3 条全部成立，平台限制已成为可执行断言，并检出 1 次"拒绝但附带给出结果"
 - **用例静态检查**：拦截缺字段、空 oracle、集合相交、工具名拼写错误（已抓到 PLAT-006 的工具名笔误）
 - **不稳定用例显式标注**：汇总时单独列出判定摇摆的用例，不进入成功率乐观解释
+- **证据规范化**：早期记录补齐为派生视图，原始 JSONL 保持只追加
 - Web 控制台可用：总览 / 运行列表 / 详情 / 事件轨迹 / SSE 实时流 / 界面触发运行
 - 核心层与平台层已分离，适配器契约见 `docs/ADAPTER_GUIDE.md`
 - **ISSUE-025 已闭环**：平台把分类阶段输出预算从 412 提到 1024 后症状消失
 - 已确认 ISSUE-026（挂载无执行能力）、ISSUE-029（挂载与会话强绑定）
-- 已定位 ISSUE-028（工具发现无界循环）、ISSUE-030（因果修复门禁自指死锁）
-- 已记录问题 30 条，详见 `02_current_issue_list_and_prompt_methods.md`
+- 已定位 ISSUE-028（工具发现无界循环）、ISSUE-030（因果修复门禁自指死锁）、ISSUE-033（拒绝时附带给出结果）
+- 已记录问题 33 条，详见 `02_current_issue_list_and_prompt_methods.md`
 - 当前主要阻断：ISSUE-030 使挂载类用例在**挂载会话内**仍无法完成首次写入

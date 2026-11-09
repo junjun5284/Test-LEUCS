@@ -49,7 +49,9 @@ def copy_harness(dest: Path) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     for name in HARNESS_FILES:
         shutil.copy2(SUBMISSION / name, dest / name)
-    for name in ("lint_cases.py", "baseline.py", "platform_metadata.py"):
+    for name in ("lint_cases.py", "baseline.py", "platform_metadata.py",
+                 "capability_contract.py", "normalize_records.py", "verify_delivery.py",
+                 "dashboard.py", "harness_cli.py"):
         src = SUBMISSION / name
         if src.is_file():
             shutil.copy2(src, dest / name)
@@ -59,6 +61,12 @@ def copy_harness(dest: Path) -> Path:
             shutil.copytree(source, dest / package)
     shutil.copytree(TESTS_DIR, dest / "tests")
     shutil.copytree(SUBMISSION / "platform_cases", dest / "platform_cases")
+    # Documents are copied too: some self-tests assert on the delivered
+    # documents (version header, referenced sections).
+    for doc in SUBMISSION.glob("*.md"):
+        shutil.copy2(doc, dest / doc.name)
+    if (SUBMISSION / "docs").is_dir():
+        shutil.copytree(SUBMISSION / "docs", dest / "docs")
     for cache in dest.rglob("__pycache__"):
         shutil.rmtree(cache, ignore_errors=True)
     return dest

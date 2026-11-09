@@ -35,7 +35,9 @@ def copy_core(dest: Path) -> Path:
     (dest / "core").mkdir(parents=True, exist_ok=True)
     shutil.copy2(SUBMISSION / "core" / "__init__.py", dest / "core" / "__init__.py")
     for name in ("platform_harness.py", "reclassify_platform.py", "report_platform.py",
-                 "lint_cases.py", "baseline.py", "platform_metadata.py"):
+                 "lint_cases.py", "baseline.py", "platform_metadata.py",
+                 "capability_contract.py", "normalize_records.py", "verify_delivery.py",
+                 "dashboard.py", "harness_cli.py"):
         src = SUBMISSION / name
         if src.is_file():
             shutil.copy2(src, dest / name)
@@ -43,6 +45,12 @@ def copy_core(dest: Path) -> Path:
     shutil.copy2(SUBMISSION / "adapters" / "__init__.py", dest / "adapters" / "__init__.py")
     if (SUBMISSION / "platform_cases").is_dir():
         shutil.copytree(SUBMISSION / "platform_cases", dest / "platform_cases")
+    # Documents are copied too: some self-tests assert on the delivered
+    # documents (version header, referenced sections).
+    for doc in SUBMISSION.glob("*.md"):
+        shutil.copy2(doc, dest / doc.name)
+    if (SUBMISSION / "docs").is_dir():
+        shutil.copytree(SUBMISSION / "docs", dest / "docs")
     shutil.copytree(SUBMISSION / "tests", dest / "tests")
     for cache in dest.rglob("__pycache__"):
         shutil.rmtree(cache, ignore_errors=True)
