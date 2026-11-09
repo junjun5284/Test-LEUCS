@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# local build / render scratch
+.dsh-office-*/
+_narration/
+_*.txt
+
+# heavy media and packaged archives are delivered out-of-band, not in git
+最终验收PPT语音版.mp4
+最终验收PPT语音版.pptx
+*.zip
+
+# platform credentials must never be committed
+.env
+*.token
