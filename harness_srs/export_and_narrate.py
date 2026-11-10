@@ -22,7 +22,9 @@ from pathlib import Path
 ROOT = Path(r"D:\浏览器\2026软件需求工程与设计模式\LEUCS_sample\harness_srs")
 DECK = ROOT / "最终验收PPT.pptx"
 PDF = ROOT / "最终验收PPT.pdf"
-NARRATED = ROOT / "最终验收PPT语音版.pptx"
+# written into its own folder: an older copy of this name may still be held by
+# a dead PowerPoint handle, and the narrated deck is a by-product anyway.
+NARRATED = ROOT / "_voice" / "最终验收PPT语音版.pptx"
 VIDEO = ROOT / "最终验收PPT语音版.mp4"
 AUDIO_DIR = ROOT / "_narration"
 
@@ -31,11 +33,14 @@ NARRATION = [
     "各位老师好，我们是李彦均和王泽辰，汇报 LEUCS 智能体平台的测试系统。"
     "我们要回答一个问题：Agent 的表现，能不能不靠印象，而是靠可以重复执行、事后能重算的判定来说清楚。"
     "这项工作留下了 106 次平台运行记录、94 份事件轨迹，以及 99 项自测和 26 个变异体的自证结果。",
-    # 2 weeks
-    "先看前五次任务实际做了什么。第一周搭需求与用例，第二周接入真实模型跑通链路，"
-    "第三周做失败与边界注入，第四周做挂载与审批，第五周把重心转向平台层的 REST 与流式事件。"
-    "第六周做通用化与交付收口。这里如实写出失败和环境问题：第五周期间平台重建了三次，"
-    "所以模型层的结论不再和平台层直接比较。",
+    # 2 five tasks
+    "第二页是五次任务的实际完成情况。第一次黑盒探索：八项探索任务，加一次 SYS-MCP 故障注入对照，"
+    "发现挂载模式没有 shell 执行、跨轮复读会触发保护终止。第二次建立测试基线：三个必选场景的自动化测试，"
+    "加一次活体观察，确认工具回执确实进入下一轮。第三次做工具使用边界：四个固定目标测试、六个边界用例、"
+    "一条四级的退化曲线，共四十一次真实运行；表面成功率掉到零，但复核后工具层三项全程满分，退化发生在表达层。"
+    "第四次做编排与状态恢复：四个场景测试，另用十二个变异体检验测试本身，补断言后从十一提到十二。"
+    "第五次做 Provider 协议：四种协议十二个测试全部通过。"
+    "最下面一行说清关系：harness 是我们把这些手工实验沉淀成的测试系统，不属于五次任务的提交内容。",
     # 3 design
     "测试系统要解决的核心问题，是把主观印象变成机械判定。四条需求：判定可机械执行、"
     "证据只追加并且可以重算、失败必须可归因、换被测目标不改判定逻辑。"
@@ -125,16 +130,34 @@ def synthesize():
 
 
 def export_pdf(app):
-    pres = app.Presentations.Open(str(DECK), ReadOnly=1, Untitled=0, WithWindow=0)
+    pres = app.Presentations.Open(str(DECK), ReadOnly=1, Untitled=0, WithWindow=-1)
     pres.SaveAs(str(PDF), 32)  # ppSaveAsPDF
     pres.Close()
     print("pdf:", PDF, PDF.stat().st_size)
 
 
 def build_video(app, audio):
-    shutil.copy2(DECK, NARRATED)
-    pres = app.Presentations.Open(str(NARRATED), ReadOnly=0, Untitled=0, WithWindow=0)
+    NARRATED.parent.mkdir(parents=True, exist_ok=True)
+    # A per-run filename avoids colliding with a copy still held open by a
+    # previous failed attempt (PowerPoint keeps the file until it is closed).
+    target = NARRATED.parent / f"narrated_{int(time.time())}.pptx"
+    shutil.copy2(DECK, target)
+    # A visible window is required here: with WithWindow=0 the media API
+    # (AddMediaObject2) fails with E_FAIL on this installation.
+    pres = app.Presentations.Open(str(target), ReadOnly=0, Untitled=0, WithWindow=-1)
+    try:
+        _fill_audio(pres, audio)
+        pres.Save()
+        print("narrated pptx saved:", target.stat().st_size)
+        _render_video(pres)
+    finally:
+        try:
+            pres.Close()
+        except Exception:
+            pass
 
+
+def _fill_audio(pres, audio):
     for idx, slide in enumerate(pres.Slides, start=1):
         wav, seconds = audio[idx - 1]
         shape = slide.Shapes.AddMediaObject2(str(wav), 0, -1, 0.4, 6.6, 0.36, 0.36)
@@ -147,23 +170,24 @@ def build_video(app, audio):
         slide.SlideShowTransition.AdvanceOnTime = -1
         slide.SlideShowTransition.AdvanceTime = round(seconds + 0.7, 1)
 
-    pres.Save()
-    print("narrated pptx saved:", NARRATED.stat().st_size)
 
+def _render_video(pres):
     if VIDEO.exists():
-        VIDEO.unlink()
+        try:
+            VIDEO.unlink()
+        except OSError:
+            print("  old video still locked, writing alongside")
     pres.CreateVideo(str(VIDEO), -1, 4, 1080, 25, 80)
-    # ppMediaTaskStatus: 1 in progress, 2 done, 3 failed, 4 queued
-    for _ in range(600):
+    # ppMediaTaskStatus: 1 in progress, 2 queued, 3 done, 4 failed
+    for _ in range(900):
         status = pres.CreateVideoStatus
-        if status in (2, 3):
+        if status in (3, 4):
             print("CreateVideo status:", status)
             break
         time.sleep(2)
     else:
         print("CreateVideo still running; giving it more time")
-        time.sleep(60)
-    pres.Close()
+        time.sleep(90)
     if VIDEO.exists():
         print("video:", VIDEO, VIDEO.stat().st_size)
     else:
@@ -173,6 +197,10 @@ def build_video(app, audio):
 def main():
     import win32com.client
     app = win32com.client.Dispatch("PowerPoint.Application")
+    try:
+        app.Visible = True
+    except Exception as exc:  # older builds may refuse
+        print("visible warn:", exc)
     try:
         export_pdf(app)
         audio = synthesize()

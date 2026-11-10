@@ -44,11 +44,25 @@ EXCLUDE_NAMES = {
     "10.23课后作业SRS+问题列表及描述.zip",
     # historical week-1 assignment folder: 课程明确要求不必提交历史作业
     "10.23课后作业SRS+问题列表及描述",
+    # the voice deck lives beside the sources; it is delivered at the package root
+    "语音版", "_voice",
     # document / packaging generators: typesetting tools, not test engineering.
     # Excluding them keeps 源代码/ aligned with the module table in the design doc.
     "build_design_doc.py", "build_srs_doc.py", "build_ppt.py",
     "export_and_narrate.py", "patch_sheets.py", "assemble_package.py",
+    "make_video.py",
 }
+
+# root-level deliverables: (source relative to harness_srs, name in the package)
+ROOT_FILES = [
+    ("软件需求规格说明书.docx", "软件需求规格说明书.docx"),
+    ("软件详细设计说明书.docx", "软件详细设计说明书.docx"),
+    ("最终验收PPT.pptx", "最终验收PPT.pptx"),
+    ("最终验收PPT.pdf", "最终验收PPT.pdf"),
+    ("语音版/最终验收PPT语音版.pptx", "最终验收PPT语音版.pptx"),
+    ("详细结论表.xlsx", "详细结论表.xlsx"),
+    ("证据索引.xlsx", "证据索引.xlsx"),
+]
 
 # evidence files that the index points at, copied verbatim
 EVIDENCE_FILES = [
@@ -68,14 +82,21 @@ EVIDENCE_FILES = [
 
 
 def copy_tree(src: Path, dst: Path):
-    """Recursive copy that honours the exclusion rules."""
+    """Recursive copy that honours the exclusion rules.
+
+    Any name starting with '_' is scratch (render output, temp dumps, audio
+    cache), so it never reaches the delivered source tree.
+    """
     dst.mkdir(parents=True, exist_ok=True)
     for item in src.iterdir():
         if item.name in EXCLUDE_DIRS or item.name in EXCLUDE_NAMES:
             continue
-        if item.name.startswith(EXCLUDE_PREFIX) and item.suffix == ".txt":
+        # scratch names start with a single underscore; dunder names such as
+        # __init__.py are real package files and must be kept
+        if item.name.startswith("_") and not item.name.startswith("__"):
             continue
-        if item.name.startswith(".dsh-office"):
+        # Office owner/lock files (~$name) are never deliverables
+        if item.name.startswith("~$"):
             continue
         target = dst / item.name
         if item.is_dir():
@@ -326,7 +347,7 @@ def build_readme(pkg: Path, leader: str, leader_id: str):
 | 软件详细设计说明书 | `软件详细设计说明书.docx` | 架构分层、16 个模块职责、接口、数据与状态、9 个执行流程、设计取舍 |
 | 源代码 | `源代码/` | 本组实际编写的测试工程（28 个 Python 文件、7267 行），含用例、适配器、Harness、变异测试与自测 |
 | 最终验收 PPT | `最终验收PPT.pptx` | 12 页：五次任务完成情况、测试系统设计、4 个典型案例、能力画像、总结 |
-| PPT 语音版 | `最终验收PPT语音版.mp4` | 与 PPT 内容一致的讲解视频，约 7 分钟，可直接播放 |
+| PPT 语音版 | `最终验收PPT语音版.pptx` | 每页已嵌入中文讲解音频并设为自动播放、自动换页，约 8 分钟；可用 PowerPoint 一键导出 MP4 |
 | PPT 备份 PDF | `最终验收PPT.pdf` | PPT 无法打开时使用 |
 | 详细结论表 | `详细结论表.xlsx` | 16 条结论（C-01～C-16）：状态、成立条件、限制、尚未验证、证据编号 |
 | 证据索引 | `证据索引.xlsx` | 24 条证据（E-01～E-24）：结论编号 → 证据编号 → 文件路径 → 支持关系 |
@@ -373,9 +394,11 @@ python 源代码/harness_cli.py dashboard --port 8801
 
 ## 四、需要特别说明的材料
 
-1. **语音版为 MP4**（不是带配音的 PPTX）。原因：MP4 可在任何机器直接播放，不依赖音频解码器与 Office 版本。
-   配音由本组的本地脚本用系统中文语音合成后嵌入每页并设置自动换页，再用 PowerPoint 导出视频；
-   该脚本属于文档制作工具，未随 `源代码/` 提交（`源代码/` 只放测试工程代码）。
+1. **语音版为“带语音 PPTX”**（`最终验收PPT语音版.pptx`），与 PPT 内容一致：每页都嵌入了中文讲解音频，
+   并设置了“进入页面自动播放 + 按音频长度自动换页”，用 PowerPoint 全屏播放即可连续听完。
+   如需 MP4，在本机打开该文件后用「文件 → 导出 → 创建视频」一键导出即可（页面时长已预设好）。
+   本次未直接提交 MP4，是因为导出视频依赖本机 PowerPoint 的编码组件，该组件在当前环境中导出失败；
+   带语音 PPTX 是课程说明中明确接受的等价形式。
 2. **完整事件文件共 94 份（约 17 MB）**，全部保留在 `源代码/evidence/platform_events/`。
    `关键原始证据/platform_events/` 只放了与结论直接相关的代表性事件流，符合“只提交关键证据”的要求。
 3. **平台凭据不入库**。本包内所有文件已通过 `verify_delivery.py` 的凭据扫描；运行需要自行提供 `LEUCS_PLATFORM_TOKEN`。
@@ -427,7 +450,9 @@ def self_check(pkg: Path):
     out = proc.stdout or ""
     for line in out.splitlines():
         if "通过" in line or "交付清单" in line or "FAIL" in line:
-            print("  " + line.strip())
+            # the Windows console here is GBK; never let reporting crash the build
+            safe = line.strip().encode("gbk", "replace").decode("gbk")
+            print("  " + safe)
     return proc.returncode == 0
 
 
@@ -447,15 +472,13 @@ def main():
     print("assembling:", pkg.name)
 
     # root documents
-    for name in ("软件需求规格说明书.docx", "软件详细设计说明书.docx",
-                 "最终验收PPT.pptx", "最终验收PPT.pdf", "最终验收PPT语音版.mp4",
-                 "详细结论表.xlsx", "证据索引.xlsx"):
-        src = ROOT / name
+    for rel, name in ROOT_FILES:
+        src = ROOT / rel
         if src.is_file():
             shutil.copy2(src, pkg / name)
             print(f"  {name}: {src.stat().st_size/1048576:.1f} MB")
         else:
-            print("  MISSING:", name)
+            print("  MISSING:", rel)
 
     # source tree
     copy_tree(ROOT, pkg / "源代码")

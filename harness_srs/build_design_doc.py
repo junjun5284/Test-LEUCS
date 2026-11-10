@@ -527,17 +527,19 @@ def build_front_matter(d: Doc):
 
     d.h2("0.3 修订历史")
     d.table(
-        ["版本", "日期", "修订内容", "对应代码阶段"],
+        ["版本", "阶段", "修订内容", "对应代码阶段"],
         [
-            ["v0.1", "第 1—4 周", "模型层最小 Harness：单轮调用、手工判定、JSON 落盘", "minimal_harness.py"],
-            ["v0.5", "第 5 周", "转向平台层：REST + SSE 采集、失败分层、只读探针、统一回归入口", "platform_harness.py / platform_probe.py / run_all.py"],
-            ["v0.8", "第 6 周", "内核与适配器分离，出现可复用的 core/ 与 adapters/，增加 mock-target 自举验证", "core/ / adapters/ / dashboard.py"],
-            ["v0.9", "第 6 周", "回归判定与配置可归因性：配置快照、指纹、基线对比、用例静态检查", "platform_metadata.py / baseline.py / lint_cases.py"],
-            ["v1.0", "最终验收", "交付收口：能力契约、交付自检与 SHA-256 清单、证据规范化视图、结论表与证据索引自动生成", "capability_contract.py / verify_delivery.py / normalize_records.py / build_acceptance_sheets.py"],
+            ["v0.1", "阶段一", "模型层最小 Harness：单轮调用、手工判定、JSON 落盘", "minimal_harness.py"],
+            ["v0.5", "阶段二", "转向平台层：REST + SSE 采集、失败分层、只读探针、统一回归入口", "platform_harness.py / platform_probe.py / run_all.py"],
+            ["v0.8", "阶段三", "内核与适配器分离，出现可复用的 core/ 与 adapters/，增加 mock-target 自举验证", "core/ / adapters/ / dashboard.py"],
+            ["v0.9", "阶段四", "回归判定与配置可归因性：配置快照、指纹、基线对比、用例静态检查", "platform_metadata.py / baseline.py / lint_cases.py"],
+            ["v1.0", "阶段五", "交付收口：能力契约、交付自检与 SHA-256 清单、证据规范化视图、结论表与证据索引自动生成", "capability_contract.py / verify_delivery.py / normalize_records.py / build_acceptance_sheets.py"],
         ],
-        widths=[1.9, 2.6, 8.5, 3.4],
+        widths=[1.9, 1.8, 8.3, 3.4],
         align_center_cols=(0, 1),
     )
+    d.note("说明：harness 是本组在完成五次 LEUCS 任务的同时自行沉淀的测试工程，"
+           "上表的阶段划分用于描述代码演进，与五次任务的次序不是一一对应关系。")
 
     d.h2("0.4 目录")
     toc = [
@@ -806,7 +808,7 @@ def build_architecture(d: Doc):
             ["`mutants/run_core_mutants.py` + 定义", "252", "核心层 12 个变异体，验证判定语义真的被断言覆盖"],
             ["`mutants/run_harness_mutants.py` + 定义", "322", "平台层 14 个变异体，验证失败分层与边界判定"],
             ["`tests/`（4 个文件）", "868", "99 项自测，覆盖内核语义、通用性、平台判定、交付工具"],
-            ["`minimal_harness.py`", "207", "第 1—4 周模型层最小 Harness，保留为演进证据"],
+            ["`minimal_harness.py`", "207", "早期模型层最小 Harness，保留为演进证据"],
             ["`real_harness.py`", "408", "早期真实模型调用 Harness，保留为演进证据"],
         ],
         widths=[5.6, 1.4, 8.8],
@@ -895,7 +897,7 @@ def build_modules(d: Doc):
         "这种用例既不能作为“支持某能力”的证据，也不能作为“该能力失败”的证据。它被单独列出并标出正负序列"
         "（如 `1010`），从成功率与失败清单两边同时剔除，避免污染结论。")
     d.p("`is_success(record)` 兼容两种历史记录形态：新记录带顶层 `success`，早期记录只有嵌套的 `judgement.success`。"
-        "这个兼容层不是随手写的——它保证了第 1—5 周的证据在今天仍然可被重新统计，由变异体 C11 守护。")
+        "这个兼容层不是随手写的——它保证了早期模型层的证据在今天仍然可被重新统计，由变异体 C11 守护。")
 
     d.h3("4.1.4 证据存储 EvidenceStore")
     d.p("`EvidenceStore` 只做四件事：`append`（追加一行 JSON）、`read`（逐行解析，坏行跳过）、"
@@ -917,7 +919,7 @@ def build_modules(d: Doc):
     d.h3("4.1.6 适配器注册表")
     d.p("`AdapterSpec(name, factory, description, options, requires)` + `register_adapter` + `get_adapter` 构成一个极小的注册表。"
         "`get_adapter` 在实例化前做参数白名单校验：传入未经声明为 `options` 的关键字会直接抛 `TypeError`，"
-        "而不是被静默忽略。这个校验的收益在第 6 周出现过一次——`dashboard.py` 曾把 `evidence_dir` 传给 `mock-target`，"
+        "而不是被静默忽略。这个校验的收益在开发中出现过一次——`dashboard.py` 曾把 `evidence_dir` 传给 `mock-target`，"
         "如果没有白名单，错误会以“证据写到错误目录”的形式在很晚才暴露。")
 
     # ---------------- 4.2 adapters ---------------- #
@@ -977,7 +979,7 @@ def build_modules(d: Doc):
     # ---------------- 4.3 platform_harness ---------------- #
     d.h2("4.3 platform_harness：平台层执行器")
     d.h3("4.3.1 定位与八个动作")
-    d.p("`platform_harness.py`（790 行）是第 5 周的主力模块，也是后期 `adapters` 的实现来源。"
+    d.p("`platform_harness.py`（790 行）是平台层的主力模块，也是后期 `adapters` 的实现来源。"
         "它既可以独立运行（`python platform_harness.py --action ...`），其函数也被适配器复用。"
         "把它保留为独立入口，是因为验收时可能需要“不经适配器、直接打一次平台接口”来做最小复现。")
     d.table(
@@ -1138,7 +1140,7 @@ def build_modules(d: Doc):
     d.h2("4.10 dashboard：Web 控制台")
     d.p("控制台（622 行）用标准库 `http.server` 实现，是 FR-34“可视化观察”的落地。"
         "它的设计定位是**观察窗口，不是新产品**：不引入前端构建链，不依赖 JS 框架，一个 HTML 页面 + 原生 `EventSource` 即可。"
-        "这也是第 6 周做出“暂缓前端 UI”决定后的最终形态。")
+        "这也是做出“暂缓前端 UI”决定后的最终形态。")
     d.p("内部结构分两部分：`Dashboard` 类负责数据（适配器解析、证据读取、运行触发），`Handler` 类负责 HTTP。"
         "`sync_adapters()` 在启动时枚举注册表并建立按适配器分离的证据路由，`_spec()` 对未知适配器直接抛 `KeyError`——"
         "这里曾出现过一个真实缺陷：早期实现用 `self.adapters.get(adapter) or self.adapters[\"leucs\"]` 兜底，"
@@ -1492,7 +1494,7 @@ def build_data(d: Doc):
         "│   ├─ mock_runs.jsonl                     8 条   mock-target 运行记录\n"
         "│   ├─ think_empty_diagnosis.json                THINK_EMPTY 根因定位结果\n"
         "│   ├─ delivery_manifest.json                    166 个文件的 SHA-256 清单\n"
-        "│   ├─ runs.jsonl / runs_real.jsonl / summary*.json   第 1—4 周模型层证据\n"
+        "│   ├─ runs.jsonl / runs_real.jsonl / summary*.json   早期模型层证据\n"
         "│   └─ …\n"
         "├─ baselines/                                    基线快照（leucs-*.json、mock-target-*.json）\n"
         "└─ cases/ cases_real/                            早期模型层用例（保留为演进证据）"
@@ -1514,7 +1516,7 @@ def build_data(d: Doc):
         caption="表 6-1  证据的三层分类",
         size=8.8,
     )
-    d.p("这个分层解决了一个具体的项目难题：第 5 周后期，平台经历了三次重建，早期记录的字段与后期不完全一致。"
+    d.p("这个分层解决了一个具体的项目难题：平台层测试后期，平台经历了三次重建，早期记录的字段与后期不完全一致。"
         "若直接改写原始记录来“统一格式”，历史结论将无法被追溯；"
         "若不做任何统一，下游分析又必须处理多种 schema。"
         "引入派生视图后，两个问题同时解决——原始记录保留原样，"
@@ -1806,7 +1808,7 @@ def build_choices(d: Doc):
     d.table(
         ["项", "内容"],
         [
-            ["问题", "第 5 周所有逻辑都在 `platform_harness.py` 里，判定、HTTP、SSE 混在一起。要证明“测试方法本身是通用的”，只能靠文字声明。"],
+            ["问题", "早期所有逻辑都在 `platform_harness.py` 里，判定、HTTP、SSE 混在一起。要证明“测试方法本身是通用的”，只能靠文字声明。"],
             ["选择", "抽出 `core/`：只保留 case → run → verdict → evidence 四个概念；把平台相关的一切推到 `adapters/`。"],
             ["理由", "通用性必须是可执行的。分离后用 `mock-target`（120 行、零网络）完整跑通同一套内核，通用性从“声明”变成“演示”。同时判定逻辑变成纯函数，可以用变异测试攻击。"],
             ["代价", "多了一层抽象，简单改动的路径变长；适配器作者必须理解四个方法的契约。"],
@@ -2206,7 +2208,7 @@ def build_status(d: Doc):
         [
             ["前端界面", "v0.8 设计含独立前端", "仅有单页原生控制台，后续按课程说明降低优先级", "8.7 节说明取舍理由；相关需求由报告文件与 CLI 覆盖"],
             ["`platform_harness.py` 与 `adapters` 功能重叠", "理想形态应只有适配器路径", "两个入口并存：前者可独立做最小复现", "4.3.1 节说明保留理由；两者共用同一套判定"],
-            ["早期模型层证据 schema 不统一", "统一 run record", "第 1—4 周记录字段较少", "由 `normalize_records.py` 派生统一视图，原记录不改写"],
+            ["早期模型层证据 schema 不统一", "统一 run record", "早期记录字段较少", "由 `normalize_records.py` 派生统一视图，原记录不改写"],
         ],
         widths=[3.4, 4.6, 4.4, 3.4],
         caption="表 11-4  设计偏差记录",
