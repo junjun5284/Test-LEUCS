@@ -422,14 +422,19 @@ python 源代码/harness_cli.py dashboard --port 8801
     (pkg / "README.md").write_text(text, encoding="utf-8")
 
 
-def zip_package(pkg: Path, zip_path: Path):
+def zip_package(pkg: Path, zip_path: Path, arc_root: str = ""):
+    """Zip the tree; every entry is placed under ``arc_root`` inside the archive."""
+    root_name = arc_root or pkg.name
     if zip_path.exists():
-        zip_path.unlink()
+        try:
+            zip_path.unlink()
+        except OSError:
+            pass
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         for path in sorted(pkg.rglob("*")):
             if path.is_dir():
                 continue
-            arc = Path(pkg.name) / path.relative_to(pkg)
+            arc = Path(root_name) / path.relative_to(pkg)
             zf.write(path, str(arc).replace("\\", "/"))
     return zip_path
 
@@ -464,12 +469,15 @@ def main():
 
     leader = args.leader
     leader_id = dict(MEMBERS).get(leader, "")
-    pkg = SAMPLE / f"{leader}_LEUCS最终验收"
+    final_name = f"{leader}_LEUCS最终验收"
+    # Build into a scratch directory: a previous package may still hold Office
+    # owner files (~$name) that make the final name undeletable on Windows.
+    pkg = SAMPLE / "_build_pkg"
     if pkg.exists():
-        shutil.rmtree(pkg)
+        shutil.rmtree(pkg, ignore_errors=True)
     pkg.mkdir(parents=True)
 
-    print("assembling:", pkg.name)
+    print("assembling:", final_name)
 
     # root documents
     for rel, name in ROOT_FILES:
@@ -503,14 +511,28 @@ def main():
         print(f"  delivered manifest: {count} files")
 
     if not args.skip_zip:
-        zip_path = SAMPLE / f"{leader}_LEUCS最终验收.zip"
-        zip_package(pkg, zip_path)
+        zip_path = SAMPLE / f"{final_name}.zip"
+        zip_package(pkg, zip_path, arc_root=final_name)
         print(f"zip: {zip_path.name}  {zip_path.stat().st_size/1048576:.1f} MB")
 
     # summary
     total = sum(f.stat().st_size for f in pkg.rglob("*") if f.is_file())
     files = sum(1 for f in pkg.rglob("*") if f.is_file())
     print(f"package: {files} files, {total/1048576:.1f} MB")
+
+    # Try to leave a browsable folder under the required name. If an old copy
+    # is still locked by a dead Office handle, the zip above is already final.
+    target = SAMPLE / final_name
+    try:
+        if target.exists():
+            shutil.rmtree(target, ignore_errors=True)
+        if not target.exists():
+            pkg.rename(target)
+            print(f"folder: {target.name}")
+        else:
+            print(f"folder kept at {pkg.name} (old {target.name} is locked)")
+    except OSError:
+        print(f"folder kept at {pkg.name} (could not rename to {target.name})")
 
 
 if __name__ == "__main__":

@@ -136,7 +136,7 @@ def export_pdf(app):
     print("pdf:", PDF, PDF.stat().st_size)
 
 
-def build_video(app, audio):
+def build_video(app, audio, want_video=True):
     NARRATED.parent.mkdir(parents=True, exist_ok=True)
     # A per-run filename avoids colliding with a copy still held open by a
     # previous failed attempt (PowerPoint keeps the file until it is closed).
@@ -149,7 +149,10 @@ def build_video(app, audio):
         _fill_audio(pres, audio)
         pres.Save()
         print("narrated pptx saved:", target.stat().st_size)
-        _render_video(pres)
+        if want_video:
+            _render_video(pres)
+        else:
+            print("skipped video export (--no-video)")
     finally:
         try:
             pres.Close()
@@ -196,6 +199,7 @@ def _render_video(pres):
 
 def main():
     import win32com.client
+    want_video = "--no-video" not in sys.argv
     app = win32com.client.Dispatch("PowerPoint.Application")
     try:
         app.Visible = True
@@ -206,7 +210,7 @@ def main():
         audio = synthesize()
         total = sum(s for _, s in audio)
         print(f"total narration: {total/60:.1f} min")
-        build_video(app, audio)
+        build_video(app, audio, want_video=want_video)
     finally:
         try:
             app.Quit()

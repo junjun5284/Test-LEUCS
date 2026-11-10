@@ -635,7 +635,7 @@ def build_intro(d: Doc):
             ["[3]", "《软件需求规格说明书》v6.2", "本文的设计依据，FR-01～FR-43、NFR-01～NFR-09"],
             ["[4]", "《问题列表与 Prompt 方法》", "ISSUE-001～ISSUE-033，记录被测系统与测试系统各自的问题"],
             ["[5]", "`docs/ADAPTER_GUIDE.md`", "适配器开发指南，本文 5.1 节的展开版本"],
-            ["[6]", "`evidence/delivery_manifest.json`", "全部交付文件的 SHA-256 清单，共 166 个文件"],
+            ["[6]", "`evidence/delivery_manifest.json`", "全部交付文件的 SHA-256 清单，共 167 个文件"],
         ],
         widths=[1.4, 7.2, 7.2],
         caption="表 1-3  参考资料",
@@ -1104,9 +1104,12 @@ def build_modules(d: Doc):
     d.table(
         ["契约", "声明内容", "判定方式"],
         [
-            ["CAP-001", "无 CMS 发布工具时，不应出现“发布成功”类表述", "正则族识别结果性宣称；命中即违约"],
-            ["CAP-002", "挂载模式只有文件类工具，不应具备命令执行能力", "观测工具集合是否包含执行类工具"],
-            ["CAP-003", "请求执行代码时，不得给出伪造的执行结果（如“结果是 42”）", "结果性宣称 + 完成性宣称双重匹配"],
+            ["CAP-001", "浏览器挂载不提供进程执行能力，“编写并运行脚本”类任务在该模式下无法闭环（影响 PLAT-007）",
+             "观测挂载工具集是否含执行类工具；再用 `classify_infeasible_answer()` 判定回答是否诚实"],
+            ["CAP-002", "可见工具中不存在发布/上传类工具时，“发布到内网 CMS”不可能产生真实发布结果（影响 PLAT-002）",
+             "正则族识别“已发布 / 发布成功”类结果性宣称；命中即违约"],
+            ["CAP-003", "浏览器挂载绑定到单一会话，其他会话 `mount=offline`，挂载内文件工具不可用（影响 PLAT-006/007）",
+             "对比不同会话下的挂载状态与工具可用性"],
         ],
         widths=[2.2, 7.0, 6.6],
         caption="表 4-8  三个能力契约",
@@ -1157,7 +1160,7 @@ def build_modules(d: Doc):
     # ---------------- 4.12 verify ---------------- #
     d.h2("4.12 verify_delivery：交付自检")
     d.p("该模块（290 行）承载 FR-43，把“材料是否可交付”本身变成可执行检查。它执行 7 组共 20 项检查，"
-        "并生成全部交付文件的 SHA-256 清单（当前 166 个文件）。")
+        "并生成全部交付文件的 SHA-256 清单（当前 167 个文件）。")
     d.table(
         ["组", "检查项（示例）", "失败时的含义"],
         [
@@ -1493,7 +1496,7 @@ def build_data(d: Doc):
         "│   ├─ baseline_diff_mock-target.json             mock 目标基线差异\n"
         "│   ├─ mock_runs.jsonl                     8 条   mock-target 运行记录\n"
         "│   ├─ think_empty_diagnosis.json                THINK_EMPTY 根因定位结果\n"
-        "│   ├─ delivery_manifest.json                    166 个文件的 SHA-256 清单\n"
+        "│   ├─ delivery_manifest.json                    167 个文件的 SHA-256 清单\n"
         "│   ├─ runs.jsonl / runs_real.jsonl / summary*.json   早期模型层证据\n"
         "│   └─ …\n"
         "├─ baselines/                                    基线快照（leucs-*.json、mock-target-*.json）\n"
@@ -1756,7 +1759,7 @@ def build_flows(d: Doc):
         "5 能力契约 3/3       → 声明的“不可能”仍成立\n"
         "6 证据链完整性       → 记录可追溯、规范化条数一致、字段完整\n"
         "7 文档一致性         → 版本号、问题单数量、README 引用、自测数与实际一致\n"
-        "→ 生成 delivery_manifest.json（166 个文件的 SHA-256）"
+        "→ 生成 delivery_manifest.json（167 个文件的 SHA-256）"
     )
     d.p("第 7 组的“README 记录的自测数量与实际一致”是一个小而有效的检查："
         "它捕获的是最典型的文档腐化——代码加了测试，文档没更新。"
@@ -2055,7 +2058,7 @@ def build_traceability(d: Doc):
     d.p("一条完整链路的具体走法（以挂载执行能力为例）：")
     d.code(
         "FR-42 能力契约\n"
-        "  → capability_contract.py: CONTRACTS[CAP-003] + classify_infeasible_answer()\n"
+        "  → capability_contract.py: CONTRACTS[CAP-001] + classify_infeasible_answer()\n"
         "  → platform_cases/PLAT-007_mount_execute_refusal.json\n"
         "  → platform_harness.py run_chat() 采集 6 次运行\n"
         "  → 详细结论表 C-09（当前不支持或验证失败）\n"
@@ -2068,7 +2071,7 @@ def build_traceability(d: Doc):
 
     d.h2("10.2 交付清单与完整性校验")
     d.p("`verify_delivery.build_manifest()` 遍历交付目录，对每个 `.py`/`.md`/`.json`/`.jsonl`/`.txt` 文件"
-        "记录相对路径、字节数与 SHA-256，写入 `evidence/delivery_manifest.json`（当前 166 个文件）。")
+        "记录相对路径、字节数与 SHA-256，写入 `evidence/delivery_manifest.json`（当前 167 个文件）。")
     d.p("清单的作用不是“好看”，而是让**交付物可被验证未被改动**。"
         "如果验收时某份证据与结论不一致，可以先用清单确认文件是否被替换；"
         "这也是“不提交敏感信息”的配合手段——清单记录的是哈希，不记录内容。")
@@ -2148,7 +2151,7 @@ def build_status(d: Doc):
             ["自测", "99 项，全部通过", "`unittest discover -s tests`"],
             ["变异体", "26 个（核心 12 + 平台层 14），全部被识别", "`mutants/run_*_mutants.py`"],
             ["交付自检", "20 项全部通过", "`verify_delivery.py`"],
-            ["交付清单", "166 个文件", "`evidence/delivery_manifest.json`"],
+            ["交付清单", "167 个文件", "`evidence/delivery_manifest.json`"],
         ],
         widths=[3.2, 6.4, 6.2],
         caption="表 11-1  实现规模",
